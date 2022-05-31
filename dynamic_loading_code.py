@@ -6,7 +6,7 @@ def dynamic_loading_test(freeCAD_doc_path, dir_name, test_time_length,time_incre
     step_nb=0
 
     FreeCAD.openDocument(freeCAD_doc_path)
-	file_name=os.path.splitext(os.path.basename(freeCAD_doc_path))[0]#extract file name
+	file_name=os.path.splitext(os.path.basename(freeCAD_doc_path))[0] #extract file name
 	App.setActiveDocument(file_name)
 	App.ActiveDocument=App.getDocument(file_name)
     freeCAD_doc=App.ActiveDocument
@@ -168,7 +168,7 @@ def dynamic_loading_test(freeCAD_doc_path, test_time_length,time_increment, init
             print("Houston, we have a problem! {}\n".format(message))  # in python console
         # loop
         while step_nb<=nb_steps :
-        new_displacement=Calculate_and_return_new_diplacement(external_file/software)#function to create
+        new_displacement=calculate_and_return_new_diplacement(external_file/software)#function to create
         new_step_inp_file=add_step_to_inp_file(new_displacement, previous_inp_file)#function to create, that does the following inp modification
         # run the analysis for each step or create a new analysis for each step?
         fea_step = ccxtools.FemToolsCcx()
@@ -185,7 +185,26 @@ def dynamic_loading_test(freeCAD_doc_path, test_time_length,time_increment, init
             FreeCAD.Console.PrintError("Houston, we have a problem! {}\n".format(message))  # in report view
                 print("Houston, we have a problem! {}\n".format(message))  # in python console
 
-
+def calculate_and_return_new_diplacement(file, node_set):#careful with hexa20 mesh elements, node order is different in inp and frd
+	#inspiration from the read_frd_result() line 555 FreeCAD/importCcxFrdResults.py at 8041f0c032edad1c268bd7cc0f0c4921a5814e94 · FreeCAD/FreeCAD · GitHub
+	for line in frd_file:
+		if line[5:9] == "DISP":
+		    mode_disp_found = True
+		if mode_disp_found and (line[1:3] == "-1"):
+		    # we found a displacement line
+		    elem = int(line[4:13])
+		    mode_disp_x = float(line[13:25])
+		    mode_disp_y = float(line[25:37])
+		    mode_disp_z = float(line[37:49])
+		    mode_disp[elem] = FreeCAD.Vector(mode_disp_x, mode_disp_y, mode_disp_z)
+		 # Check if we found the end of a section
+        	if line[1:3] == "-3":
+            		end_of_section_found = True
+		            if mode_disp_found:
+				mode_results["disp"] = mode_disp
+				mode_disp = {}
+				mode_disp_found = False
+				node_element_section = False
 
 
 
