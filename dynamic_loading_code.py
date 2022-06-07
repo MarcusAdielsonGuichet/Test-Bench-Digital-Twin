@@ -1,19 +1,21 @@
 #Hypothesis that Geometry, Analaysis, SolverCCX, Material, Self Weight, Initial displacement and Mesh are set for the model in the GUI
 import os
 import shutil
+import sys
 import FemGui
+#use imporlib.reload(module_name) to udpate a module you're working on
+#next lines of code exerts this error
+#because of incompatibility in Python version between FreeCAD 0.19 and the pyso I'm using, I think, or I need to point to the DLL instead. Unresolved for the moment
+#ImportError: DLL load failed while importing FreeCAD: The specified procedure could not be found.
+sys.path.append(r"C:\Program Files\FreeCAD 0.19\bin")
 import FreeCad
-import femtools
-from femtools import ccxtools
 
-def create_new_directory(parent,child):
-    # New Path
-    path = os.path.join(parent, child)
-    # Create the child directory
-    try:
-        os.makedirs(path, exist_ok = True)
-    except OSError as error:
-        "Directory '%s' can not be created" % child
+
+#the following works, or at least it doesn't generate any error
+sys.path.append(r"C:\Program Files\FreeCAD 0.19\Mod\Fem")
+import femtools
+
+from femtools import *
 
 def dynamic_loading_test(freeCAD_doc_path, test_time_length,time_increment, init_disp):
     nb_steps=test_time_length//time_increment
@@ -21,7 +23,7 @@ def dynamic_loading_test(freeCAD_doc_path, test_time_length,time_increment, init
     # opening the geometry and analysis FreeCAD file
     FreeCAD.openDocument(freeCAD_doc_path)
     file_name=os.path.splitext(os.path.basename(freeCAD_doc_path))[0]
-    App.setActiveDocument(file_name)#this doesn't work apparently, don't know if it's useful thought
+    App.setActiveDocument(file_name)#this doesn't work apparently on FreeCAD console, don't know if it's useful thought
     App.ActiveDocument=App.getDocument(file_name)#same here
     freeCAD_doc=App.ActiveDocument
 
@@ -32,6 +34,7 @@ def dynamic_loading_test(freeCAD_doc_path, test_time_length,time_increment, init
     fea = ccxtools.FemToolsCcx()
     fea.update_objects()
     fea.setup_working_dir()
+	
     fea.setup_ccx()
     message = fea.check_prerequisites()
     if not message:
@@ -96,57 +99,118 @@ from FreeCAD import write_constraint_fixed as con_fixed
 
 #Almost finished
 def add_step_to_inp_file(directory, doc, step_nb):
+	dir_path = directory
+	for root, dirs, files in os.walk(dir_path):
+		for file in files:
+			if file.endswith('.inp'):
+               	 		previous_inp_file_path=root+'/'+str(file)
+                		new_inp_file_path=root+'/'+os.path.splitext(os.path.basename(file))[0]+" Step "+str(step_nb)+".inp"
+    #shutil.copy(previous_inp_file_path,new_inp_file_path)
+    #code above works 01/06/2022 18:00, needs r+directory if '\' are used
+	previous_inp_file=open(previous_inp_file_path, 'r')
+	#there's an OS error(project file for this line on FreeCAD but not pyso, must be a issue with the open(file_path) command.
+	#Upon further tests, it does work when no FreeCAD module have been imported, so I need to find where the core python functions are located 
+	new_inp_file=open(new_inp_file_path, 'w')
+	end_step_count=0
+	for line in new_inp_file:
+		if "*END STEP" in line:
+			end_step_count+=1
+			if end_step_count==step_nb-1:#at the start of step n, n-1 steps have been made, so n-1 end step cards have been written in the inp file
+				write_dynamic_step(new_inp_file)# write the dynamic calcultation line
+
+				cons_fixed=femtools.membertools.get_member(doc.Analysis,"Fem::ConstraintFixed")
+				write_constraints_propdata(inpfile, doc.ConstraintFixed, con_fixed)#writes the comment on the inp file as well as the fixed constraints
+				#*********************************************************** f.write("\n{}\n".format(59 * "*"))
+				#** Fixed Constraints by get_constraint_title function
+				#** written by write_constraints_fixed function
+				#** ConstraintFixed by the for loop inside write_constraints_propdata, dependent on the number of displacements in the analysis group, writes their label
+				#*BOUNDARY by write_constraint function 
+				#ConstraintFixed,1 Fixed in X direction
+				#ConstraintFixed,2 Fixed in Y direction
+				#ConstraintFixed,3 Fixed in Z direction
+				
+				#in write_constraints_propdata():femtools.membertools.get_member(doc.Analysis,"Fem::ConstraintDisplacement")(I think) =all Fem::ConstraintDisplacement objects in analysis=member.cons_displacement=femobjs	
+				#so write_constraints_propdata(inpfile, member.cons_fixed, con_fixed) is the folowing
+				cons_displacement=femtools.membertools.get_member(doc.Analysis,"Fem::ConstraintDisplacement")	
+				write_constraints_propdata(inpfile, cons_displacement, con_displacement)#writes the comment on the inp file
+				#*********************************************************** f.write("\n{}\n".format(59 * "*"))
+				#** Displacement constraint applied by get_constraint_title function
+				#** written by write_constraints_displacement function 
+				#** ConstraintDisplacement (label of the displacement in FreeCAD) by the for loop inside write_constraints_propdata, dependent on the number of displacements in the analysis group, writes their label
+				#*BOUNDARY
+				#ConstraintDisplacement,Degree of freedom, Degree of freedom, Displacement Value
+
+				# output and step end
+				write_step_output.write_step_output(inpfile)#informs CCX on the type of data to be written in the frd output file
+				write_step_equation.write_step_end(inpfile)#writes the end step line
+				end_step_count+=1
+				break
+		new_inp_file.write(line)
+	new_inp_file.close()
+    	previous_inp_file.close()
+
+
+#This works perfect without FreeCAD imports
+def get_files(directory, step_nb):
     dir_path = directory
     for root, dirs, files in os.walk(dir_path):
         for file in files:
             if file.endswith('.inp'):
-                previous_inp_file_path=root+'/'+str(file)
-                new_inp_file_path=root+'/'+os.path.splitext(os.path.basename(file))[0]+" Step "+str(step_nb)+".inp"
-    shutil.copy(previous_inp_file_path,new_inp_file_path)
-    #code above works 01/06/2022 18:00, needs r+directory if '\' are used
-	
-	new_inp_file=open(new_inp_file_path, 'a+')
-	for line in new_inp_file:
-		if "*END STEP" in line:
-			end_step_count+=1
-		if end_step_count==nb-1:
-			write_dynamic_step(new_inp_file)# write the dynamic calcultation line
+                previous_inp_file_path=root+'\\'+str(file)
+                new_inp_file_path=root+'\\'+os.path.splitext(os.path.basename(file))[0]+" Step "+str(step_nb)+".inp"
+    previous_inp_file=open(previous_inp_file_path,'r')
+    new_inp_file=open(new_inp_file_path, 'w')
+    end_step_count=0
+    for line in previous_inp_file:
+        new_inp_file.write(line)
+        if "*END STEP" in line:
+            end_step_count+=1
+            if end_step_count==step_nb-1:
+                write_dynamic_step(new_inp_file)# write the dynamic calcultation line
+                break
+    new_inp_file.close()
+    previous_inp_file.close()
 			
-			cons_fixed=femtools.membertools.get_member(doc.Analysis,"Fem::ConstraintFixed")
-			write_constraints_propdata(inpfile, doc.ConstraintFixed, con_fixed)#writes the comment on the inp file as well as the fixed constraints
-			#*********************************************************** f.write("\n{}\n".format(59 * "*"))
-			#** Fixed Constraints by get_constraint_title function
-			#** written by write_constraints_fixed function
-			#** ConstraintFixed by the for loop inside write_constraints_propdata, dependent on the number of displacements in the analysis group, writes their label
-			#*BOUNDARY by write_constraint function 
-			#ConstraintFixed,1 Fixed in X direction
-			#ConstraintFixed,2 Fixed in Y direction
-			#ConstraintFixed,3 Fixed in Z direction
-			
-			cons_displacement=femtools.membertools.get_member(doc.Analysis,"Fem::ConstraintDisplacement")	
-			write_constraints_propdata(inpfile, cons_displacement, con_displacement)#writes the comment on the inp file
-			#*********************************************************** f.write("\n{}\n".format(59 * "*"))
-			#** Displacement constraint applied by get_constraint_title function
-			#** written by write_constraints_displacement function 
-			#** ConstraintDisplacement (label of the displacement in FreeCAD) by the for loop inside write_constraints_propdata, dependent on the number of displacements in the analysis group, writes their label
-			#*BOUNDARY
-			#ConstraintDisplacement,Degree of freedom, Degree of freedom, Displacement Value
-
-			
-			# output and step end
-			write_step_output.write_step_output(inpfile)#informs CCX on the type of data to be written in the frd output file
-			write_step_equation.write_step_end(inpfile)#writes the step end line
 #Maybe finished	
 def write_dynamic_step(file):
-	file.write("*STEP\n")
-	file.write("*MODAL DYNAMIC, PERTUBATION\n")
+	file.write("*STEP, PERTURBATION\n")
+	file.write("*MODAL DYNAMIC\n")
 	#Add time increment and step time value?
+	
+def create_new_directory(parent,child):
+    # New Path
+    path = os.path.join(parent, child)
+    # Create the child directory
+    try:
+        os.makedirs(path, exist_ok = True)
+    except OSError as error:
+        "Directory '%s' can not be created" % child
+	
 
 	
-#in write_constraints_propdata():femtools.membertools.get_member(doc.Analysis,"Fem::ConstraintDisplacement")(I think) =all Fem::ConstraintDisplacement objects in analysis=member.cons_displacement=femobjs	
-#so write_constraints_propdata(inpfile, member.cons_fixed, con_fixed)	
+
 	
-##Draft codes	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	##Draft codes	
 
 def dynamic_loading_test_draft(freeCAD_doc_path, dir_name, test_time_length,time_increment, init_disp):
 
