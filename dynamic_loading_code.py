@@ -4,7 +4,7 @@ import shutil
 import FemGui
 import FreeCad
 import femtools
-
+from femtools import ccxtools
 
 def create_new_directory(parent,child):
     # New Path
@@ -21,8 +21,8 @@ def dynamic_loading_test(freeCAD_doc_path, test_time_length,time_increment, init
     # opening the geometry and analysis FreeCAD file
     FreeCAD.openDocument(freeCAD_doc_path)
     file_name=os.path.splitext(os.path.basename(freeCAD_doc_path))[0]
-    App.setActiveDocument(file_name)
-    App.ActiveDocument=App.getDocument(file_name)
+    App.setActiveDocument(file_name)#this doesn't work apparently, don't know if it's useful thought
+    App.ActiveDocument=App.getDocument(file_name)#same here
     freeCAD_doc=App.ActiveDocument
 
     # activating analysis
@@ -39,6 +39,7 @@ def dynamic_loading_test(freeCAD_doc_path, test_time_length,time_increment, init
         fea.write_inp_file() #initial displacement
         fea.ccx_run()
         fea.load_results()
+	#add a variable that fetch the directory of the tests for the add_step function
     else:
         FreeCAD.Console.PrintError("Houston, we have a problem! {}\n".format(message))  # in report view
             print("Houston, we have a problem! {}\n".format(message))  # in python console
@@ -55,7 +56,7 @@ def dynamic_loading_test(freeCAD_doc_path, test_time_length,time_increment, init
         # run the analysis for each step or create a new analysis for each step?
         fea_step = ccxtools.FemToolsCcx()
         fea_step.update_objects()
-        fea_step.setup_working_dir()
+        fea_step.setup_working_dir()#might need to modifiy this for a more explicit directory and taking the new inp files
         fea_step.setup_ccx()
         message = fea_step.check_prerequisites()
 	if not message:
