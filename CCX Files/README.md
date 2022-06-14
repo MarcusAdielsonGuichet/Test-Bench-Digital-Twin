@@ -94,5 +94,6 @@ And finally the step is concluded with the "*End step" card
 Step blocks can be repeated in chain for however many steps required
 
 For the second part, I'm trying to understand how to save each step in the memory, if it possible, so we can run Calculix dynamicaly for the step by step analysis.
+This could be done with the *RESTART keyword, need more tests.
 
 For the post processing part, I recommend using PreProMax, as it can animate each increment of each step into a movie so you can witness firstand the result.
