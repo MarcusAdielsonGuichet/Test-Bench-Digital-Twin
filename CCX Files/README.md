@@ -70,8 +70,11 @@ Constraints are identified with the "*Boundary" keycard (and can be repeated for
 Here's an example:
 
 *Boundary
+
 ConstraintDisplacement, 1, 1, -24
+
 *Boundary
+
 Internal_Selection-1_Fixed-1, 1, 6, 0
 
 The first two lines defines a displacement of -24mm on the x translation for the node set defined as ConstraintDisplacement
