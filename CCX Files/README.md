@@ -62,7 +62,7 @@ Then the time characteristics of the step which are as follow:
 - Max increment value means the next increment calculation in the step needs to be at best done Max_increment_value seconds after the previous one
 
 Then we have our inputs(loads, contraints...)
-Constraints are identified with the "*Boundary" keycard (and can be repeated for as many constraints that need to be defined) and are followed by(section 7.4 CCX Manual):
+Constraints are identified with the "*Boundary, Op=default Mod(keep previous boundary)" keycard (and can be repeated for as many constraints that need to be defined) and are followed by(section 7.4 CCX Manual):
 - The node/node sets
 - The first degree of freedom affected
 - The last degree of freedom affected
@@ -80,7 +80,7 @@ Internal_Selection-1_Fixed-1, 1, 6, 0
 The first two lines defines a displacement of -24mm on the x translation for the node set defined as ConstraintDisplacement
 The next two lines defines a fixed constraint on all degrees of freedom(x,y,z translation and rotation) for the nodes in the Internal_Selection-1_Fixed-1 node set.
 
-Loads on the other hand are definded by the "*Cload, Op=New/Mod" or "*Dload, Op=New/Mod" keywords with the following indicators (section 7.15 and 7.39 CCX Manual):
+Loads on the other hand are definded by the "*Cload, Op=default Mod(keep previous cload)" or "*Dload, Op=default Mod(keep previous dload)" keywords with the following indicators (section 7.15 and 7.39 CCX Manual):
 - The node/node sets
 - The degree of freedom affected
 - The value of the load
