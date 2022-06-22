@@ -19,7 +19,7 @@ Defined by the user, usually with the GUI or by writing the input files to the s
 
 # Step 4) is the complicated part:
 Multiple free FEA solvers exist on the market, all have varying degrees of difficulty and user-friendliness. However, most run on the Linux OS and thus required more computer science knowledge to be executed correctly.
-In my case, I'm using the default solver in FreeCAD called "CalculiX", which is based of the Abaqus(paid) language. It is one of the most popular FEA solvers because of it's easy language and use for strutural analysis.
+In my case, I'm using the default solver in FreeCAD called "CalculiX", which is based of the Abaqus(paid) language. It is one of the most popular FEA solvers because of its easy language and use for strutural analysis.
 
 CalculiX's usage can be decomposed in 3 parts:
 - The input file or any file file with the .inp extension
