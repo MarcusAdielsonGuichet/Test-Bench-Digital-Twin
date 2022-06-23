@@ -9,6 +9,6 @@ python -m pip install unifmu[python-backend]
 
 Now there are two ways to test the FMU:
 - Run python code directly: python .\fmu_example\resources\model.py  
-- Load and run the FMU using the FMpy library: 
+- Load and run the FMU using the FMpy library: python run_fmu.py
 
 You should test the code with both approaches.
