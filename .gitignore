@@ -1,3 +1,4 @@
 *.pyc
 /example_unifmu_standalone/venv/
 
+/example_unifmu_standalone/fmu_example/resources/_fmu_env_/
