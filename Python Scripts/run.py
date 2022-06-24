@@ -30,6 +30,26 @@ def run(ccx_exe_path,work_dir,first_inp_directory):
     break
   os.system(ccx_exe_path+" "+inp_file_name)
   
+  
+  
+  #This is the code from FreeCAD
+  # run solver
+  self._process = subprocess.Popen(
+      [binary, "-i", _inputFileName],
+      cwd=self.directory,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE
+  )
+  self.signalAbort.add(self._process.terminate)
+  # output = self._observeSolver(self._process)
+  self._process.communicate()
+  self.signalAbort.remove(self._process.terminate)
+  # if not self.aborted:
+  #     self._updateOutput(output)
+  # del output   # get flake8 quiet
+  
+  
+  
   #Need to build and add a monitor to check if there are no issue with the files, with the subprocess module function, and continue only if the previous step has been completed
   rout_file_dir=first_inp_directory
   step_dir=first_inp_directory
