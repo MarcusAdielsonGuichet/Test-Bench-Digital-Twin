@@ -4,6 +4,8 @@ import shutil
 import glob
 import subprocess
 
+
+
 ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
 work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
 first_inp_directory=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
@@ -118,7 +120,7 @@ def copy_rename_rout_to_rin(work_dir,rout_file_dir,new_step_folder_name, new_ste
   except OSError as error:
     print(error)
 
-#verified and working
+#verified and working, doesn't include Matrix storage
 def write_new_step_inpfile_with_restart_read_write(step_dir,first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type):#needs a previous run, rename the last_step.rout into new_inp_file.rin 
   
   new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
@@ -156,7 +158,32 @@ def run_inp_file(ccx_exe_path, step_dir, new_step_name):
   os.chdir(step_dir)
   os.system(ccx_exe_path+" "+new_step_name)
   
+def runtest(ccx_exe_path,work_dir,first_inp_directory):
+  os.chdir(first_inp_directory)
+  for root, dirs, files in os.walk(first_inp_directory):
+    for file in files:
+      if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
+        inp_file_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
+        inp_file_path=os.path.join(first_inp_directory,file)
+        break
+    else:
+      continue
+    break
   
+  # run solver
+  _process = subprocess.Popen(
+      [ccx_exe_path,"-i",inp_file_name],
+      cwd=first_inp_directory,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE
+  )
+  ccx_output, ccx_err=_process.communicate()
+  calculation_end="Job finished"
+  ce=calculation_end.encode('utf-8')
+  if ce in ccx_output:
+    return "No error"
+  else:
+    return ccx_output #best would be to show the error instead
 
   
 
