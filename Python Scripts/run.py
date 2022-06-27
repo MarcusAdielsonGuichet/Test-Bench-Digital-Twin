@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import glob
+import subprocess
 
 ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
 work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
@@ -34,42 +35,56 @@ def run(ccx_exe_path,work_dir,first_inp_directory):
   
   #This is the code from FreeCAD
   # run solver
-  self._process = subprocess.Popen(
-      [binary, "-i", _inputFileName],
+  _process = subprocess.Popen(
+      [ccx_exe_path, "-i ", inp_file_name],
       cwd=self.directory,
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE
   )
-  self.signalAbort.add(self._process.terminate)
-  # output = self._observeSolver(self._process)
-  self._process.communicate()
-  self.signalAbort.remove(self._process.terminate)
-  # if not self.aborted:
-  #     self._updateOutput(output)
-  # del output   # get flake8 quiet
+  #self.signalAbort.add(self._process.terminate)
+  _process.communicate()
+  #self.signalAbort.remove(self._process.terminate)
   
   
   
   #Need to build and add a monitor to check if there are no issue with the files, with the subprocess module function, and continue only if the previous step has been completed
   rout_file_dir=first_inp_directory
   step_dir=first_inp_directory
-  [Disp_node_set_name,first_degree_freedom,last_degree_freedom]=get_disp_characteristics(inp_file_path)
+  [Disp_node_set_name,
+   first_degree_freedom,
+   last_degree_freedom]=get_disp_characteristics(inp_file_path)
   for i in range(2,total_step+1):
     #send the outputs for new input calc in the other FMU
-    [mass_matrix, stiff_matrix, disp_values]=read_and_send_outputs(step_dir)
+    [mass_matrix,
+     stiff_matrix,
+     disp_values]=read_and_send_outputs(step_dir)
     
     #update the FMU inputs, with those received from the other FMU
-    [first_increment_value,step_duration,min_increment_value,max_increment_value,output_type,new_disp_value]=update_inputs(other_fmu)
+    [first_increment_value,
+     step_duration,
+     min_increment_value,
+     max_increment_value,
+     output_type,
+     new_disp_value]=update_inputs(other_fmu)
     
     new_step_folder_name="Step_"+i
     new_step_name="init_Step_"+i
     
     #Procedure for the *RESTART function, check ccx manual for more info
-    step_dir=copy_rename_rout_to_rin(work_dir,rout_file_dir,new_step_folder_name, new_step_name)
+    step_dir=copy_rename_rout_to_rin(work_dir,
+                                     rout_file_dir,
+                                     new_step_folder_name,
+                                     new_step_name)
     
     #Generate and run the new step inp
-    write_new_step_inpfile_with_restart_read_write(first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type)
-    run_inp_file(ccx_exe_path, step_dir, new_step_name)
+    write_new_step_inpfile_with_restart_read_write(first_increment_value,
+                                                   step_duration,
+                                                   min_increment_value,
+                                                   max_increment_value,
+                                                   new_step_name,output_type)
+    run_inp_file(ccx_exe_path,
+                 step_dir,
+                 new_step_name)
 
 def read_and_send_outputs(step_dir):
   return mass_matrix, stiff_matrix, disp_values
@@ -104,7 +119,7 @@ def copy_rename_rout_to_rin(work_dir,rout_file_dir,new_step_folder_name, new_ste
     print(error)
 
 #verified and working
-def write_new_step_inpfile_with_restart_read_write(step_dir, first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type):#needs a previous run, rename the last_step.rout into new_inp_file.rin 
+def write_new_step_inpfile_with_restart_read_write(step_dir,first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type):#needs a previous run, rename the last_step.rout into new_inp_file.rin 
   
   new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
   #Continuing the previous step calculation
