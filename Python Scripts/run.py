@@ -153,11 +153,7 @@ def write_new_step_inpfile_with_restart_read_write(step_dir,first_increment_valu
   new_inp.write("*END STEP")
   new_inp.close()
 
-#verified and working
-def run_inp_file(ccx_exe_path, step_dir, new_step_name):
-  os.chdir(step_dir)
-  os.system(ccx_exe_path+" "+new_step_name)
-  
+#verified and functional
 def runtest(ccx_exe_path,work_dir,first_inp_directory):
   os.chdir(first_inp_directory)
   for root, dirs, files in os.walk(first_inp_directory):
@@ -171,23 +167,53 @@ def runtest(ccx_exe_path,work_dir,first_inp_directory):
     break
   
   # run solver
-  _process = subprocess.Popen(
+  output=subprocess.run(
       [ccx_exe_path,"-i",inp_file_name],
-      cwd=first_inp_directory,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE
-  )
-  ccx_output, ccx_err=_process.communicate()
+      capture_output=True,
+      check=True,
+      encoding='utf-8'
+  ).stdout
   calculation_end="Job finished"
-  ce=calculation_end.encode('utf-8')
-  if ce in ccx_output:
+  if calculation_end in output:
     return "No error"
   else:
-    return ccx_output #best would be to show the error instead
-
+    return output #best would be to show the error instead
   
 
-  
+
+
+# #verified and working, but obsolete if we use subprocess.run instead
+# def run_inp_file(ccx_exe_path, step_dir, new_step_name):
+#   os.chdir(step_dir)
+#   os.system(ccx_exe_path+" "+new_step_name)
+#   
+# def runtest(ccx_exe_path,work_dir,first_inp_directory):
+#   os.chdir(first_inp_directory)
+#   for root, dirs, files in os.walk(first_inp_directory):
+#     for file in files:
+#       if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
+#         inp_file_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
+#         inp_file_path=os.path.join(first_inp_directory,file)
+#         break
+#     else:
+#       continue
+#     break
+#   
+#   # run solver
+#   _process = subprocess.Popen(
+#       [ccx_exe_path,"-i",inp_file_name],
+#       cwd=first_inp_directory,
+#       stdout=subprocess.PIPE,
+#       stderr=subprocess.PIPE
+#   )
+#   ccx_output, ccx_err=_process.communicate()
+#   calculation_end="Job finished"
+#   ce=calculation_end.encode('utf-8')
+#   if ce in ccx_output:
+#     return "No error"
+#   else:
+#     return ccx_output #best would be to show the error instead
+#   
   
   # 
   # src = rout_file_path
