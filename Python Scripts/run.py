@@ -3,8 +3,7 @@ import sys
 import shutil
 import glob
 import subprocess
-
-
+import numpy as np
 
 ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
 work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
@@ -16,11 +15,12 @@ first_inp_directory=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
 disp_node_set_name="ConstraintDisplacement"
 fixed_node_set_name="ConstraintFixed"
 first_degree_freedom=last_degree_freedom=1
-
+total_step=20
 
 
 #The first inp step file is written by hand, later iterations will use the gmesh converter directly.
-def run(ccx_exe_path,work_dir,first_inp_directory):
+#Verified with comented section, takes 1-2 min for 20 steps with matrix generations and same values of disp for each step, however last folder stays active in the manager so need to kill the process once over
+def run_simulation(ccx_exe_path,work_dir,first_inp_directory):
   os.chdir(first_inp_directory)
   for root, dirs, files in os.walk(first_inp_directory):
     for file in files:
@@ -31,63 +31,69 @@ def run(ccx_exe_path,work_dir,first_inp_directory):
     else:
       continue
     break
-  os.system(ccx_exe_path+" "+inp_file_name)
   
-  
-  
-  #This is the code from FreeCAD
   # run solver
-  _process = subprocess.Popen(
-      [ccx_exe_path, "-i ", inp_file_name],
-      cwd=self.directory,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE
-  )
-  #self.signalAbort.add(self._process.terminate)
-  _process.communicate()
-  #self.signalAbort.remove(self._process.terminate)
-  
-  
-  
-  #Need to build and add a monitor to check if there are no issue with the files, with the subprocess module function, and continue only if the previous step has been completed
-  rout_file_dir=first_inp_directory
-  step_dir=first_inp_directory
-  [Disp_node_set_name,
-   first_degree_freedom,
-   last_degree_freedom]=get_disp_characteristics(inp_file_path)
-  for i in range(2,total_step+1):
-    #send the outputs for new input calc in the other FMU
-    [mass_matrix,
-     stiff_matrix,
-     disp_values]=read_and_send_outputs(step_dir)
+  output=subprocess.run(
+      [ccx_exe_path,"-i",inp_file_name],
+      capture_output=True,
+      check=True,
+      encoding='utf-8'
+  ).stdout
+  calculation_end="Job finished"
+  if calculation_end not in output:
+    return output
+  else:
+    error=False
+    rout_file_dir=first_inp_directory
+    step_dir=first_inp_directory
+    # disp_node_set_name,
+    # first_degree_freedom,
+    # last_degree_freedom=get_disp_characteristics(inp_file_path)#need to read the inp file and extract the corresponding values and names
     
-    #update the FMU inputs, with those received from the other FMU
-    [first_increment_value,
-     step_duration,
-     min_increment_value,
-     max_increment_value,
-     output_type,
-     new_disp_value]=update_inputs(other_fmu)
-    
-    new_step_folder_name="Step_"+i
-    new_step_name="init_Step_"+i
-    
-    #Procedure for the *RESTART function, check ccx manual for more info
-    step_dir=copy_rename_rout_to_rin(work_dir,
-                                     rout_file_dir,
-                                     new_step_folder_name,
-                                     new_step_name)
-    
-    #Generate and run the new step inp
-    write_new_step_inpfile_with_restart_read_write(first_increment_value,
-                                                   step_duration,
-                                                   min_increment_value,
-                                                   max_increment_value,
-                                                   new_step_name,output_type)
-    run_inp_file(ccx_exe_path,
-                 step_dir,
-                 new_step_name)
+    for i in range(2,total_step+1):
+      if error==False:
+        # #send the outputs to the other FMU
+        # mass_matrix,
+        # stiff_matrix,
+        # disp_values=read_and_send_outputs(step_dir)#need to read the .mas, .sti, .dat files and send corresponding outputs types to the other FMU, need more info on orchestrator for that
+        
+        # #update the FMU inputs
+        # first_increment_value,
+        # step_duration,
+        # min_increment_value,
+        # max_increment_value,
+        # output_type,
+        # new_disp_value=update_inputs(other_fmu)#User defined? Orchestrator defined?
+        
+        new_step_folder_name=f"Step_{i}"
+        new_step_name=f"init_Step_{i}"
+        
+        #Procedure for the *RESTART function, check ccx manual for more info
+        step_dir=copy_rename_rout_to_rin(work_dir,
+        rout_file_dir,
+        new_step_folder_name,
+        new_step_name)
+        
+        #Generate and run the new step inp
+        new_step_inpfile_writer(step_dir,
+        first_increment_value,
+        step_duration,
+        min_increment_value,
+        max_increment_value,
+        new_step_name,
+        output_type)
+        
+        out=run_inp_file(ccx_exe_path,
+        step_dir,
+        new_step_name)
+      else:
+        break
+        return out
+    return "Job done, no issues"
 
+def get_disp_characteristics(inp_file_path):
+  return disp_node_set_name,first_degree_freedom,last_degree_freedom
+  
 def read_and_send_outputs(step_dir):
   return mass_matrix, stiff_matrix, disp_values
 
@@ -120,8 +126,8 @@ def copy_rename_rout_to_rin(work_dir,rout_file_dir,new_step_folder_name, new_ste
   except OSError as error:
     print(error)
 
-#verified and working, doesn't include Matrix storage
-def write_new_step_inpfile_with_restart_read_write(step_dir,first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type):#needs a previous run, rename the last_step.rout into new_inp_file.rin 
+#verified and working
+def new_step_inpfile_writer(step_dir,first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type):#needs a previous run, rename the last_step.rout into new_inp_file.rin 
   
   new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
   #Continuing the previous step calculation
@@ -129,7 +135,7 @@ def write_new_step_inpfile_with_restart_read_write(step_dir,first_increment_valu
   
   #Step characteristics and analysis type
   new_inp.write("*STEP, INC=1000000\n")
-  new_inp.write("*DYNAMIC\n")
+  new_inp.write("*STATIC\n")
   new_inp.write(f"{first_increment_value},{step_duration},{min_increment_value},{max_increment_value}\n")
   
   #Saving the calculation for next step
@@ -184,7 +190,19 @@ def runtest(ccx_exe_path,work_dir,first_inp_directory):
   else:
     return output #best would be to show the error instead
   
-
+def run_inp_file(ccx_exe_path,step_dir,new_step_name):
+  os.chdir(step_dir)
+  output=subprocess.run(
+      [ccx_exe_path,"-i",new_step_name],
+      capture_output=True,
+      check=True,
+      encoding='utf-8'
+  ).stdout
+  calculation_end="Job finished"
+  if calculation_end not in output:
+    error=True
+    return output
+  return None
 
 
 # #verified and working, but obsolete if we use subprocess.run instead
