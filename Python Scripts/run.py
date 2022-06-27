@@ -130,26 +130,31 @@ def write_new_step_inpfile_with_restart_read_write(step_dir,first_increment_valu
   #Step characteristics and analysis type
   new_inp.write("*STEP, INC=1000000\n")
   new_inp.write("*DYNAMIC\n")
-  new_inp.write(str(first_increment_value)+","+str(step_duration)+","+str(min_increment_value)+","+str(max_increment_value)+"\n")
+  new_inp.write(f"{first_increment_value},{step_duration},{min_increment_value},{max_increment_value}\n")
   
   #Saving the calculation for next step
   new_inp.write("*RESTART, WRITE\n")
   
   #Displaced nodes characteristics 
   new_inp.write("*BOUNDARY\n")
-  new_inp.write(disp_node_set_name+","+str(first_degree_freedom)+","+str(last_degree_freedom)+","+str(disp_value)+"\n")
+  new_inp.write(f"{disp_node_set_name},{first_degree_freedom},{last_degree_freedom},{disp_value}\n")
   
   #Fixed nodes
   new_inp.write("*BOUNDARY\n")
-  new_inp.write(fixed_node_set_name+",1,6,0\n")
+  new_inp.write(f"{fixed_node_set_name},1,6,0\n")
   
   #Output files and values
-  new_inp.write("*NODE PRINT, NSET="+disp_node_set_name)
+  new_inp.write(f"*NODE PRINT, NSET={disp_node_set_name}")
   if output_type=="Disp":
     new_inp.write("\nU\n")
   elif output_type=="Force":
     new_inp.write(",Totals=Only\nRF\n")
     
+  new_inp.write("*END STEP")
+  
+  #Mass and stiffness storage
+  new_inp.write("*STEP\n")
+  new_inp.write("*FREQUENCY, SOLVER=MATRIXSTORAGE\n")
   new_inp.write("*END STEP")
   new_inp.close()
 
