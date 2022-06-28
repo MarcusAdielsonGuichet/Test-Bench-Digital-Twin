@@ -1,4 +1,4 @@
-# Python-code-for-Test-Bench-Digital-Twin
+# Test-Bench-Digital-Twin
 
 The process to creating the FEA part of the Digital Twin for the test bench is split into several parts:
 - 1) Creating a geometry of the test bench on a CAD software, in our case FreeCAD
