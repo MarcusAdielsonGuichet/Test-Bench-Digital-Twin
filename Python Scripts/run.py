@@ -89,7 +89,7 @@ def run_simulation(ccx_exe_path,work_dir,first_inp_directory):
       else:
         break
         return out
-    return "Job done, no issues"
+    return f"{out}\nJob done, no issues"
 
 def get_disp_characteristics(inp_file_path):
   return disp_node_set_name,first_degree_freedom,last_degree_freedom
@@ -201,8 +201,7 @@ def run_inp_file(ccx_exe_path,step_dir,new_step_name):
   calculation_end="Job finished"
   if calculation_end not in output:
     error=True
-    return output
-  return None
+  return output
 
 
 # #verified and working, but obsolete if we use subprocess.run instead
