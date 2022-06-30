@@ -156,7 +156,7 @@ def new_step_inpfile_writer(step_dir,first_increment_value,step_duration,min_inc
   elif output_type=="Force":
     new_inp.write(",Totals=Only\nRF\n")
     
-  new_inp.write("*END STEP")
+  new_inp.write("*END STEP\n")
   
   #Mass and stiffness storage
   new_inp.write("*STEP\n")
