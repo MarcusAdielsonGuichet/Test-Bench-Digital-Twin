@@ -15,7 +15,7 @@ first_inp_directory=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
 disp_node_set_name="ConstraintDisplacement"
 fixed_node_set_name="ConstraintFixed"
 first_degree_freedom=last_degree_freedom=1
-total_step=20
+total_steps=20
 
 
 #The first inp step file is written by hand, later iterations will use the gmesh converter directly.
