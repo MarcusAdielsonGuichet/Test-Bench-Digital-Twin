@@ -21,3 +21,11 @@ Now there are two ways to test the FMU:
 - Load and run the FMU using the FMpy library: python run_fmu.py
 
 You should test the code with both approaches.
+
+#For Conda
+conda activate myenv
+
+#before running
+python -m fmpy.gui
+
+#modify the model.py for the moment

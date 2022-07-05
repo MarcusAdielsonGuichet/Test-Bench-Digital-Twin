@@ -13,19 +13,20 @@ class Model:
         self.step_duration = 0.0
         self.min_increment_value = 0.0
         self.max_increment_value = 0.0
-        self.output_type =
-        self.disp_value =
-        self.disp_node_set_name =
-        self.first_degree_freedom =
-        self.last_degree_freedom =
-        self.total_step =
-        self.mass_matrix =
-        self.stiff_matrix =
-        self.ccx_exe_path =
-        self.work_dir =
-        self.first_inp_directory =
-        self. =
-        self. =
+        self.output_type = ""
+        self.disp_value =0.0
+        self.disp_node_set_name =""
+        self.first_degree_freedom =0
+        self.last_degree_freedom =0
+        self.total_step =0
+        self.ccx_exe_path =""
+        self.work_dir =""
+        self.first_inp_directory =""
+        self.rout_filename=""
+        self.dat_filename=""
+        self.mass_matrix_filename =""
+        self.stiff_matrix_filename =""
+
 
         self.reference_to_attribute = {
             0: "first_increment_value",
@@ -39,8 +40,12 @@ class Model:
             8: "first_degree_freedom",
             9: "last_degree_freedom",
             10: "total_steps",
-            11: "mass_matrix",
-            12: "stiff_matrix"
+            11: "ccx_exe_path",
+            12: "work_dir"
+            13: "first_inp_directory"
+            14: "rout_filename"
+            15: "dat_filename"
+            16: "dat_filename"
         }
 
         self._update_outputs()
