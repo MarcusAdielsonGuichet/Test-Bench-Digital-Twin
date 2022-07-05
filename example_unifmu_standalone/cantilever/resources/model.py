@@ -1,32 +1,46 @@
 import pickle
+import os
+import sys
+import shutil
+import glob
+import subprocess
+import numpy as np
 
 
 class Model:
     def __init__(self) -> None:
-        self.real_a = 0.0
-        self.real_b = 0.0
-        self.integer_a = 0
-        self.integer_b = 0
-        self.boolean_a = False
-        self.boolean_b = False
-        self.string_a = ""
-        self.string_b = ""
-        self.filename = ""
+        self.first_increment_value = 0.0
+        self.step_duration = 0.0
+        self.min_increment_value = 0.0
+        self.max_increment_value = 0.0
+        self.output_type =
+        self.disp_value =
+        self.disp_node_set_name =
+        self.first_degree_freedom =
+        self.last_degree_freedom =
+        self.total_step =
+        self.mass_matrix =
+        self.stiff_matrix =
+        self.ccx_exe_path =
+        self.work_dir =
+        self.first_inp_directory =
+        self. =
+        self. =
 
         self.reference_to_attribute = {
-            0: "real_a",
-            1: "real_b",
-            2: "real_c",
-            3: "integer_a",
-            4: "integer_b",
-            5: "integer_c",
-            6: "boolean_a",
-            7: "boolean_b",
-            8: "boolean_c",
-            9: "string_a",
-            10: "string_b",
-            11: "string_c",
-            12: "filename"
+            0: "first_increment_value",
+            1: "step_duration",
+            2: "min_increment_value",
+            3: "max_increment_value",
+            4: "output_type",
+            5: "disp_value",
+            6: "disp_node_set_name",
+            7: "fixed_node_set_name",
+            8: "first_degree_freedom",
+            9: "last_degree_freedom",
+            10: "total_steps",
+            11: "mass_matrix",
+            12: "stiff_matrix"
         }
 
         self._update_outputs()
