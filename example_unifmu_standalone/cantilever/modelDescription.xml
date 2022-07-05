@@ -57,12 +57,12 @@
 
     <!--Index of variable = "10"-->
     <ScalarVariable name="last_degree_freedom" valueReference="9" variability="discrete" causality="input">
-      <Integer start="" />
+      <Integer start="0" />
     </ScalarVariable>
 
     <!--Index of variable = "11"-->
     <ScalarVariable name="total_steps" valueReference="10" variability="discrete" causality="input">
-      <Integer start="" />
+      <Integer start="0" />
     </ScalarVariable>
 
     <!--Index of variable = "12"-->

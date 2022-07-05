@@ -108,7 +108,6 @@ class Model:
             step_dir,
             new_step_name)
             else:
-                break
                 #Can I do this? Or better to write error function?
                 return Fmi2Status.error, out
             self._update_outputs()#need to modify this with the actual outputs
@@ -161,14 +160,7 @@ class Model:
         bytes = pickle.dumps(
             (
                 self.real_a,
-                self.real_b,
-                self.integer_a,
-                self.integer_b,
-                self.boolean_a,
-                self.boolean_b,
-                self.string_a,
-                self.string_b,
-                self.filename
+
             )
         )
         return Fmi2Status.ok, bytes
@@ -176,14 +168,7 @@ class Model:
     def fmi2ExtDeserialize(self, bytes) -> int:
         (
             real_a,
-            real_b,
-            integer_a,
-            integer_b,
-            boolean_a,
-            boolean_b,
-            string_a,
-            string_b,
-            filename
+
         ) = pickle.loads(bytes)
         self.real_a = real_a
 
