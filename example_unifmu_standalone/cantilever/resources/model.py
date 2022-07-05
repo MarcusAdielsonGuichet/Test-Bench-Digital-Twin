@@ -16,9 +16,10 @@ class Model:
         self.output_type = ""
         self.disp_value =0.0
         self.disp_node_set_name =""
+        self.fixed_node_set_name =""
         self.first_degree_freedom =0
         self.last_degree_freedom =0
-        self.total_step =0
+        self.total_steps =0
         self.ccx_exe_path =""
         self.work_dir =""
         self.first_inp_directory =""
