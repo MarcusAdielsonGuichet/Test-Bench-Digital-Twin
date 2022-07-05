@@ -53,11 +53,68 @@ class Model:
         self._update_outputs()
 
     def fmi2DoStep(self, current_time, step_size, no_step_prior):
-        self._update_outputs()
-        # read file from filename
-        # do stuff from file
-        print(self.filename)
-        return Fmi2Status.ok
+        #3 use cases:
+            #First step, so no need for the rout/rin function
+            #Nth step without error
+            #Nth step with error
+
+        if no_step_prior==0:
+            os.chdir(first_inp_directory)#Assumption first directory was created and first inp is inside it
+            for root, dirs, files in os.walk(first_inp_directory):
+                for file in files:
+                if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
+                    inp_file_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
+                    # inp_file_path=os.path.join(first_inp_directory,file)
+                    break
+                else:
+                    continue
+                break
+
+            # run solver
+            output=subprocess.run(
+                [ccx_exe_path,"-i",inp_file_name],
+                capture_output=True,
+                check=True,
+                encoding='utf-8'
+            ).stdout
+            if "Job finished" not in output:
+                return output, Fmi2Status.error#rearrange this with the fmu work code
+            else:
+                error=False
+                rout_file_dir=first_inp_directory
+                step_dir=first_inp_directory
+                return Fmi2Status.ok
+
+        elif no_step_prior>0 and (error is not False):
+            new_step_folder_name=f"Step_{i}"
+            new_step_name=f"init_Step_{i}"
+
+            #Necessary procedure for the *RESTART function, check ccx manual for more info
+            step_dir=copy_rename_rout_to_rin(work_dir,
+            rout_file_dir,
+            new_step_folder_name,
+            new_step_name)
+
+            #Generate and run the new step inp
+            new_step_inpfile_writer(step_dir,
+            first_increment_value,
+            step_duration,
+            min_increment_value,
+            max_increment_value,
+            new_step_name,
+            output_type)
+
+            out=run_inp_file(ccx_exe_path,
+            step_dir,
+            new_step_name)
+            else:
+                break
+                #Can I do this? Or better to write error function?
+                return Fmi2Status.error, out
+            self._update_outputs()#need to modify this with the actual outputs
+            return Fmi2Status.ok
+        elif  no_step_prior>0 and (error is False):
+            #weird use case, needs tests first
 
     def fmi2EnterInitializationMode(self):
         return Fmi2Status.ok
@@ -129,14 +186,7 @@ class Model:
             filename
         ) = pickle.loads(bytes)
         self.real_a = real_a
-        self.real_b = real_b
-        self.integer_a = integer_a
-        self.integer_b = integer_b
-        self.boolean_a = boolean_a
-        self.boolean_b = boolean_b
-        self.string_a = string_a
-        self.string_b = string_b
-        self.filename = filename
+
         self._update_outputs()
 
         return Fmi2Status.ok
@@ -158,10 +208,17 @@ class Model:
         return Fmi2Status.ok, values
 
     def _update_outputs(self):
-        self.real_c = self.real_a + self.real_b
-        self.integer_c = self.integer_a + self.integer_b
-        self.boolean_c = self.boolean_a or self.boolean_b
-        self.string_c = self.string_a + self.string_b
+        #modify to satisfy the present problem, the cantilever beam
+        #Outputs:
+            #Displacement forces
+            #Displacement vectors
+            #Mass matrix
+            #Stiffness matrix
+
+        self.mass_matrix_filename =
+        self.stiff_matrix_filename =
+        self.dat_filename =
+        self.rout_filename =
 
 
 class Fmi2Status:
