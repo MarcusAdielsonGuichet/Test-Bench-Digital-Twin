@@ -45,7 +45,8 @@ class Model:
             13: "first_inp_directory"
             14: "rout_filename"
             15: "dat_filename"
-            16: "dat_filename"
+            16: "mass_matrix_filename"
+            17: "stiff_matrix_filename"
         }
 
         self._update_outputs()
