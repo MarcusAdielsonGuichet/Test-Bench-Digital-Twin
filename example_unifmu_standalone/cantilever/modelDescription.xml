@@ -81,7 +81,7 @@
     </ScalarVariable>
 
     <!--Index of variable = "15"-->
-    <ScalarVariable name="rout_filename" valueReference="14" variability="discrete" causality="output">
+    <ScalarVariable name="rout_dir" valueReference="14" variability="discrete" causality="output">
       <String start="" />
     </ScalarVariable>
 
@@ -98,6 +98,11 @@
     <!--Index of variable = "18"-->
     <ScalarVariable name="stiff_matrix_filename" valueReference="17" variability="discrete" causality="output">
       <String start="" />
+    </ScalarVariable>
+
+    <!--Index of variable = "19"-->
+    <ScalarVariable name="stiff_matrix_filename" valueReference="18" variability="discrete" causality="input">
+      <Boolean start=False />
     </ScalarVariable>
 
   </ModelVariables>

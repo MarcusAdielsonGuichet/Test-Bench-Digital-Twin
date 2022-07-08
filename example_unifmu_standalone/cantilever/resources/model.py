@@ -77,20 +77,11 @@ class Model:
                 new_step_name=f"init_Step_{no_step_prior+1}"
 
                 #Necessary procedure for the *RESTART function, check ccx manual for more info
-                step_dir=copy_rename_rout_to_rin(self.work_dir,
-                fea.rout_file_dir,
-                new_step_folder_name,
-                new_step_name)
+                step_dir=self.copy_rename_rout_to_rin(new_step_folder_name,new_step_name)
 
                 #Generate and run the new step inp
-                new_step_inpfile_writer(step_dir,
-                self.first_increment_value,
-                self.step_duration,
-                self.min_increment_value,
-                self.max_increment_value,
-                new_step_name,
-                self.output_type)
-            out=run_inp_file(self.ccx_exe_path,step_dir,new_step_name)
+                self.new_step_inpfile_writer(step_dir,new_step_name)
+            out=self.run_inp_file(step_dir,new_step_name)
             if "Job finished" in out:
                 #self._update_outputs()#need to modify this with the actual outputs
                 return Fmi2Status.ok
@@ -102,14 +93,14 @@ class Model:
             #weird use case, needs tests first
             return Fmi2Status.error
 
-    def copy_rename_rout_to_rin(work_dir,rout_file_dir,new_step_folder_name, new_step_name):
+    def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
         # New step folder path
-        new_path = os.path.join(work_dir, new_step_folder_name)
+        new_path = os.path.join(self.work_dir, new_step_folder_name)
 
         # Create the directory if it doesn't already exist
         try:
             os.mkdir(new_path)
-            for root, dirs, files in os.walk(rout_file_dir):#search inside the dir for the rout file
+            for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
                 for file in files:
                     if file.endswith('.rout'):
                         rout_file_name=file
@@ -117,7 +108,7 @@ class Model:
                     else:
                         continue
                 break
-            rout_path = os.path.join(rout_file_dir, rout_file_name)#build the complete path for the rout file
+            rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
             shutil.copy(rout_path,new_path) #copy the file to the new folder
 
             copied_rout_file = os.path.join(new_path,rout_file_name)#build the new path for the rout file
@@ -130,7 +121,7 @@ class Model:
             print(error)
 
 
-    def new_step_inpfile_writer(step_dir,first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type):#needs a previous run, rename the last_step.rout into new_inp_file.rin
+    def new_step_inpfile_writer(self, step_dir,new_step_name):#needs a previous run, rename the last_step.rout into new_inp_file.rin
 
         new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
         #Continuing the previous step calculation
@@ -139,24 +130,24 @@ class Model:
         #Step characteristics and analysis type
         new_inp.write("*STEP, INC=1000000\n")
         new_inp.write("*STATIC\n")
-        new_inp.write(f"{first_increment_value},{step_duration},{min_increment_value},{max_increment_value}\n")
+        new_inp.write(f"{self.first_increment_value},{self.step_duration},{self.min_increment_value},{self.max_increment_value}\n")
 
         #Saving the calculation for next step
         new_inp.write("*RESTART, WRITE\n")
 
         #Displaced nodes characteristics, add force loads?
         new_inp.write("*BOUNDARY\n")
-        new_inp.write(f"{disp_node_set_name},{first_degree_freedom},{last_degree_freedom},{disp_value}\n")
+        new_inp.write(f"{self.disp_node_set_name},{self.first_degree_freedom},{self.last_degree_freedom},{self.disp_value}\n")
 
         #Fixed nodes
         new_inp.write("*BOUNDARY\n")
-        new_inp.write(f"{fixed_node_set_name},1,6,0\n")
+        new_inp.write(f"{self.fixed_node_set_name},1,6,0\n")
 
         #Output files and values
-        new_inp.write(f"*NODE PRINT, NSET={disp_node_set_name}")
-        if output_type=="Disp":
+        new_inp.write(f"*NODE PRINT, NSET={self.disp_node_set_name}")
+        if self.output_type=="Disp":
             new_inp.write("\nU\n")
-        elif output_type=="Force":
+        elif self.output_type=="Force":
             new_inp.write(",Totals=Only\nRF\n")
 
         new_inp.write("*END STEP\n")
@@ -167,16 +158,15 @@ class Model:
         new_inp.write("*END STEP")
         new_inp.close()
 
-    def run_inp_file(ccx_exe_path,step_dir,new_step_name):
+    def run_inp_file(self,step_dir,new_step_name):
         os.chdir(step_dir)
         output=subprocess.run(
-            [ccx_exe_path,"-i",new_step_name],
+            [self.ccx_exe_path,"-i",new_step_name],
             capture_output=True,
             check=True,
             encoding='utf-8'
         ).stdout
-        calculation_end="Job finished"
-        if calculation_end not in output:
+        if "Job finished" not in output:
             self.error=True
         return output
 
@@ -344,6 +334,7 @@ class Fmi2Status:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    import random
 
     # create FMU
     fea = Model()
@@ -354,8 +345,8 @@ if __name__ == "__main__":
     fea.min_increment_value =1E-8 # min increment value[s]
     fea.max_increment_value= 1E-1 # max increment value[s]
     t = np.linspace(0.0, 200, 1) # Time axis.
-    f = np.sin(2*np.pi*t/200) #Force load array[unit to determine]
-    u = np.sin(2*np.pi*t/200) #displacement array[mm]
+    u =random.sample(range(-20,20), 20) #displacement array[mm]
+    print(u)
 
     fea.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
     fea.work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
@@ -375,7 +366,8 @@ if __name__ == "__main__":
     for no_step_prior in range(fea.total_steps):
 
         fea.disp_value = u[no_step_prior]
-        fea.fmi2DoStep(t[no_step_prior], t[no_step_prior], no_step_prior)
+        fea.fmi2DoStep(1,1, no_step_prior)
+        #run_inp_file(self.ccx_exe_path,step_dir,new_step_name)
 
     # plt.plot(t, RN)
     # plt.ylabel("RN")
