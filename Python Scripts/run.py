@@ -87,7 +87,6 @@ def run_simulation(ccx_exe_path,work_dir,first_inp_directory):
         step_dir,
         new_step_name)
       else:
-        break
         return out
     return f"{out}\nJob done, no issues"
 
