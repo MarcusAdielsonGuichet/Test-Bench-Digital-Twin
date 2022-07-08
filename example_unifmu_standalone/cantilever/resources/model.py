@@ -22,7 +22,7 @@ class Model:
         self.total_steps =0
         self.ccx_exe_path =""
         self.work_dir =""
-        self.first_inp_directory =""
+        self.first_inp_directory ="" #redundant
         self.rout_dir=""
         self.dat_filename=""
         self.mass_matrix_filename =""
@@ -44,7 +44,7 @@ class Model:
             10: "total_steps",
             11: "ccx_exe_path",
             12: "work_dir",
-            13: "first_inp_directory",
+            13: "first_inp_directory",#redundant
             14: "rout_dir",
             15: "dat_filename",
             16: "mass_matrix_filename",
@@ -54,7 +54,7 @@ class Model:
 
         self._update_outputs()
 
-    def fmi2DoStep(self, no_step_prior):
+    def fmi2DoStep(self, current_time, step_size, no_step_prior):
         #3 use cases:
             #First step, so no need for the rout/rin function
             #Nth step without error
@@ -62,7 +62,8 @@ class Model:
         if self.error==False:
             if no_step_prior==0:
                 #Finding the inp file
-                for root, dirs, files in os.walk(first_inp_directory):
+                step_dir=self.first_inp_directory
+                for root, dirs, files in os.walk(step_dir):
                     for file in files:
                         if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
                             new_step_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
@@ -71,15 +72,13 @@ class Model:
                         else:
                             continue
                     break
-                step_dir=self.first_inp_directory
-
             elif no_step_prior>0:
                 new_step_folder_name=f"Step_{no_step_prior+1}"
                 new_step_name=f"init_Step_{no_step_prior+1}"
 
                 #Necessary procedure for the *RESTART function, check ccx manual for more info
                 step_dir=copy_rename_rout_to_rin(self.work_dir,
-                rout_file_dir,
+                fea.rout_file_dir,
                 new_step_folder_name,
                 new_step_name)
 
@@ -91,12 +90,9 @@ class Model:
                 self.max_increment_value,
                 new_step_name,
                 self.output_type)
-
-            out=run_inp_file(self.ccx_exe_path,
-            step_dir,
-            new_step_name)
+            out=run_inp_file(self.ccx_exe_path,step_dir,new_step_name)
             if "Job finished" in out:
-                self._update_outputs()#need to modify this with the actual outputs
+                #self._update_outputs()#need to modify this with the actual outputs
                 return Fmi2Status.ok
             else:
                 self.error=True
@@ -181,7 +177,7 @@ class Model:
         ).stdout
         calculation_end="Job finished"
         if calculation_end not in output:
-            error=True
+            self.error=True
         return output
 
     def fmi2EnterInitializationMode(self):
@@ -347,4 +343,41 @@ class Fmi2Status:
 
 
 if __name__ == "__main__":
-    m = Model()
+    import matplotlib.pyplot as plt
+
+    # create FMU
+    fea = Model()
+
+    #Step parameters values
+    fea.step_duration = 1.0 # step time [s]
+    fea.first_increment_value = 1E-5 # first increment value[s]
+    fea.min_increment_value =1E-8 # min increment value[s]
+    fea.max_increment_value= 1E-1 # max increment value[s]
+    t = np.linspace(0.0, 200, 1) # Time axis.
+    f = np.sin(2*np.pi*t/200) #Force load array[unit to determine]
+    u = np.sin(2*np.pi*t/200) #displacement array[mm]
+
+    fea.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
+    fea.work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
+    fea.rout_dir=fea.first_inp_directory=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
+
+
+
+    fea.output_type="Disp"
+    fea.disp_node_set_name="ConstraintDisplacement"
+    fea.fixed_node_set_name="ConstraintFixed"
+    fea.first_degree_freedom=fea.last_degree_freedom=1#constraints on the x axis
+    fea.total_steps=20
+
+    # output
+    #RN = np.zeros(step)
+
+    for no_step_prior in range(fea.total_steps):
+
+        fea.disp_value = u[no_step_prior]
+        fea.fmi2DoStep(t[no_step_prior], t[no_step_prior], no_step_prior)
+
+    # plt.plot(t, RN)
+    # plt.ylabel("RN")
+    # plt.xlabel("t")
+    # plt.show()
