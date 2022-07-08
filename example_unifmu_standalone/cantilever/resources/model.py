@@ -307,6 +307,38 @@ class Model:
         self.dat_filename =""
         self.rout_filename =""
 
+    def get_disp(filename):#verified and running 08/07/2022
+        file=open(filename,'r')
+        result_disp=[]
+        for i, line in enumerate(file):
+            if i>=3:
+                node_disp_values=[]
+                #Node number
+                node_disp_values.append(int(line[:10].strip()))
+                #Ux
+                node_disp_values.append(float(line[12:24].strip()))
+                #Uy
+                node_disp_values.append(float(line[26:39].strip()))
+                #Uz
+                node_disp_values.append(float(line[40:].strip()))
+                result_disp.append(node_disp_values)
+        return result_disp
+
+    def get_forces(dat_filename):
+        file=open(dat_filename,'r')
+        for i, line in enumerate(file):
+            if i>=3:
+                result_forces_values=[]
+                #Fx
+                result_forces_values.append(float(line[3:21].strip()))
+                #Fy
+                result_forces_values.append(float(line[22:34].strip()))
+                #Fz
+                result_forces_values.append(float(line[35:].strip()))
+                break
+        file.close()#is this necessary?
+        return result_forces_values
+
 
 class Fmi2Status:
     """Represents the status of the FMU or the results of function calls.
