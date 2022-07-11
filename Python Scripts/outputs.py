@@ -1,5 +1,6 @@
 import re
-test =r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1\init_Step_1.dat"
+import numpy as np
+test =r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1\init_Step_1.sti"
 def get_disp(dat_filename):
     file=open(dat_filename,'r')
     result_disp=[]
@@ -33,32 +34,75 @@ def get_forces(dat_filename):
     file.close()#is this necessary?
     return result_forces_values
 
+def get_mass_matrix(mas_filename):
+    file=open(mas_filename,'r')
+    result_mat=[]
+    for i, line in enumerate(file):
+        if len(line.split("  "))==2:#checks if there no blank lines
+            #Separator on the .mas is "  " between the coord and the value
+            str_coord=line.split("  ")[0]
+            str_value=line.split("  ")[1]
+            #Extraction and data type transformation
+            mat_line, mat_column=int(str_coord.split()[0]),int(str_coord.split()[1])
+            value=float(str_value[0:len(str_value)-1])
+            result_mat.append([mat_line,mat_column,value])
 
+    #Storing the values into a np array? Given that only non-zero values are given by the .mas file, is it important to have the complete matrix?
+    n,p= result_mat[len(result_mat)-1][0],result_mat[len(result_mat)-1][1]
+    mass_mat=np.zeros((n,p))
+    for element in result_mat:
+        mass_mat[element[0]-1,element[1]-1]=element[2]
 
+    file.close()#is this necessary?
+    return mass_mat
 
+def get_stiffness_matrix(sti_filename):
+    file=open(sti_filename,'r')
+    result_mat=[]
+    for i, line in enumerate(file):
+        if len(line.split("  "))==2:#checks if there no blank lines
+            #Separator on the .sti is "  " between the coord and the value
+            [str_coord, str_value]=line.split("  ")
 
+            #Extraction and data type transformation
+            mat_line, mat_column=int(str_coord.split()[0]),int(str_coord.split()[1])
+            value=float(str_value[0:len(str_value)-1])
+            result_mat.append([mat_line,mat_column,value])
 
+    #Storing the values into a np array? Given that only non-zero values are given by the .sti file, is it important to have the complete matrix?
+    n,p= result_mat[len(result_mat)-1][0],result_mat[len(result_mat)-1][1]
+    stif_mat=np.zeros((n,p))
+    for element in result_mat:
+        stif_mat[element[0]-1,element[1]-1]=element[2]
 
+    file.close()#is this necessary?
+    return stif_mat
 
-
-
-#result_disp.append(lines.split("  "))
 #
-# s = "12 hello 52 19 some random 15 number"
-# # Extract numbers and cast them to int
-# list_of_nums = map(int, re.findall('\d+', s))
-# print list_of_nums
-#
-#
-# files = open(fo, 'r')
-# for i, line in enumerate(files):
-# if i%8 == 2:
-# print line
-# elif i%8 == 5:
-# print line
 #
 #
 #
-# for char in (line [:10].strip()):
-# if s.isdi
-# print(lines [:10].strip())#I'm going to suppose that the number of nodes is less than 1E9 since there are only 10 collums for the node numbers
+#
+#
+#
+#
+# #result_disp.append(lines.split("  "))
+# #
+# # s = "12 hello 52 19 some random 15 number"
+# # # Extract numbers and cast them to int
+# # list_of_nums = map(int, re.findall('\d+', s))
+# # print list_of_nums
+# #
+# #
+# # files = open(fo, 'r')
+# # for i, line in enumerate(files):
+# # if i%8 == 2:
+# # print line
+# # elif i%8 == 5:
+# # print line
+# #
+# #
+# #
+# # for char in (line [:10].strip()):
+# # if s.isdi
+# # print(lines [:10].strip())#I'm going to suppose that the number of nodes is less than 1E9 since there are only 10 collums for the node numbers
