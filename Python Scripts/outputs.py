@@ -37,14 +37,9 @@ def get_forces(dat_filename):
 def get_mass_matrix(mas_filename):
     file=open(mas_filename,'r')
     result_mat=[]
-    for i, line in enumerate(file):
-        if len(line.split("  "))==2:#checks if there no blank lines
-            #Separator on the .mas is "  " between the coord and the value
-            str_coord=line.split("  ")[0]
-            str_value=line.split("  ")[1]
-            #Extraction and data type transformation
-            mat_line, mat_column=int(str_coord.split()[0]),int(str_coord.split()[1])
-            value=float(str_value[0:len(str_value)-1])
+    for line in file:
+        if len(line.split())>1:#filters out the last blank line
+            mat_line, mat_column,value=int(line.split()[0]),int(line.split()[1]),float(line.split()[2])
             result_mat.append([mat_line,mat_column,value])
 
     #Storing the values into a np array? Given that only non-zero values are given by the .mas file, is it important to have the complete matrix?
@@ -59,17 +54,12 @@ def get_mass_matrix(mas_filename):
 def get_stiffness_matrix(sti_filename):
     file=open(sti_filename,'r')
     result_mat=[]
-    for i, line in enumerate(file):
-        if len(line.split("  "))==2:#checks if there no blank lines
-            #Separator on the .sti is "  " between the coord and the value
-            [str_coord, str_value]=line.split("  ")
-
-            #Extraction and data type transformation
-            mat_line, mat_column=int(str_coord.split()[0]),int(str_coord.split()[1])
-            value=float(str_value[0:len(str_value)-1])
+    for line in file:
+        if len(line.split())>1:
+            mat_line, mat_column,value=int(line.split()[0]),int(line.split()[1]),float(line.split()[2])
             result_mat.append([mat_line,mat_column,value])
 
-    #Storing the values into a np array? Given that only non-zero values are given by the .sti file, is it important to have the complete matrix?
+    #Storing the values into a np array? Given that only non-zero values are given by the .sti file, is it important to have the complete matrix? Besides 4 digits are lost in conversion apparently
     n,p= result_mat[len(result_mat)-1][0],result_mat[len(result_mat)-1][1]
     stif_mat=np.zeros((n,p))
     for element in result_mat:
