@@ -1,38 +1,48 @@
 import re
 import numpy as np
-test =r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1\init_Step_1.sti"
+test =r"C:\Users\marcu\OneDrive\Desktop\test\force_disp_dat\force_disp_dat.dat"
+
 def get_disp(dat_filename):
     file=open(dat_filename,'r')
     result_disp=[]
-    for i, line in enumerate(file):
-        if i>=3:
-            node_disp_values=[]
-            #Node number
-            node_disp_values.append(int(line[:10].strip()))
-            #Ux
-            node_disp_values.append(float(line[12:24].strip()))
-            #Uy
-            node_disp_values.append(float(line[26:39].strip()))
-            #Uz
-            node_disp_values.append(float(line[40:].strip()))
-            result_disp.append(node_disp_values)
+    disp_section=False
+    for line in file:
+        if len(line.split())>1:
+            if line.split()[0]=="displacements":
+                disp_section=True
+            if line.split()[0].isnumeric()==False and line.split()[0]!="displacements":
+                disp_section=False
+            if disp_section==True and line.split()[0].isnumeric():#Verfication for non-blank lines and disp section
+                node_nb,ux,uy,uz=int(line.split()[0]),float(line.split()[1]),float(line.split()[2]),float(line.split()[3])
+                result_disp.append([node_nb,ux,uy,uz])
     file.close()#is this necessary?
     return result_disp
 
+def isfloat(num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
+
 def get_forces(dat_filename):
     file=open(dat_filename,'r')
-    for i, line in enumerate(file):
-        if i>=3:
-            result_forces_values=[]
-            #Fx
-            result_forces_values.append(float(line[3:21].strip()))
-            #Fy
-            result_forces_values.append(float(line[22:34].strip()))
-            #Fz
-            result_forces_values.append(float(line[35:].strip()))
-            break
+    forces_section=False
+    result_force=[]
+    force_sum=[]
+    for line in file:
+        if len(line.split())>1:
+            if "forces"in line:
+                forces_section=True
+            if isfloat(line.split()[0])==False and "forces" not in line:#works but not as wanted
+                forces_section=False
+            if forces_section==True and isfloat(line.split()[0]):#Verfication for non-blank lines and disp section
+                fx,fy,fz=float(line.split()[0]),float(line.split()[1]),float(line.split()[2])
+                result_force.append([fx,fy,fz])
     file.close()#is this necessary?
-    return result_forces_values
+    return result_force
+
+
 
 def get_mass_matrix(mas_filename):
     file=open(mas_filename,'r')
