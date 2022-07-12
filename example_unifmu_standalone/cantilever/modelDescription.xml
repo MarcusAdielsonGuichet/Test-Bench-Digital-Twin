@@ -12,77 +12,77 @@
   <ModelVariables>
     <!--Index of variable = "1"-->
     <ScalarVariable name="first_increment_value" valueReference="0" variability="continuous" causality="input">
-      <Real start="0.0" />
+      <Real start="1e-5" />
     </ScalarVariable>
 
     <!--Index of variable = "2"-->
     <ScalarVariable name="step_duration" valueReference="1" variability="continuous" causality="input">
-      <Real start="0.0" />
+      <Real start="1" />
     </ScalarVariable>
 
     <!--Index of variable = "3"-->
     <ScalarVariable name="min_increment_value" valueReference="2" variability="continuous" causality="input">
-      <Real start="0.0" />
+      <Real start="1e-3" />
     </ScalarVariable>
 
     <!--Index of variable = "4"-->
     <ScalarVariable name="max_increment_value" valueReference="3" variability="continuous" causality="input">
-      <Real start="0.0" />
+      <Real start="1e-1" />
     </ScalarVariable>
 
     <!--Index of variable = "5"-->
     <ScalarVariable name="output_type" valueReference="4" variability="discrete" causality="input">
-      <String start="" />
+      <String start="Disp" />
     </ScalarVariable>
 
     <!--Index of variable = "6"-->
     <ScalarVariable name="disp_value" valueReference="5" variability="discrete" causality="input">
-      <Real start="0.0" />
+      <Real start="20" />
     </ScalarVariable>
 
     <!--Index of variable = "7"-->
     <ScalarVariable name="disp_node_set_name" valueReference="6" variability="discrete" causality="input">
-      <String start="" />
+      <String start="ConstraintDisplacement" />
     </ScalarVariable>
 
     <!--Index of variable = "8"-->
     <ScalarVariable name="fixed_node_set_name" valueReference="7" variability="discrete" causality="input">
-      <String start="" />
+      <String start="ConstraintFixed" />
     </ScalarVariable>
 
     <!--Index of variable = "9"-->
     <ScalarVariable name="first_degree_freedom" valueReference="8" variability="discrete" causality="input">
-      <Integer start="0" />
+      <Integer start="1" />
     </ScalarVariable>
 
     <!--Index of variable = "10"-->
     <ScalarVariable name="last_degree_freedom" valueReference="9" variability="discrete" causality="input">
-      <Integer start="0" />
+      <Integer start="1" />
     </ScalarVariable>
 
     <!--Index of variable = "11"-->
     <ScalarVariable name="total_steps" valueReference="10" variability="discrete" causality="input">
-      <Integer start="0" />
+      <Integer start="20" />
     </ScalarVariable>
 
     <!--Index of variable = "12"-->
     <ScalarVariable name="ccx_exe_path" valueReference="11" variability="discrete" causality="input">
-      <String start="" />
+      <String start="C:\\Users\\marcu\\OneDrive\\Desktop\\calculix2.19win64\\ccx\\ccx_219.exe" />
     </ScalarVariable>
 
     <!--Index of variable = "13"-->
     <ScalarVariable name="work_dir" valueReference="12" variability="discrete" causality="input">
-      <String start="" />
+      <String start="C:\\Users\\marcu\\OneDrive\\Desktop\\test\\run_test" />
     </ScalarVariable>
 
     <!--Index of variable = "14"-->
     <ScalarVariable name="analysis_type" valueReference="13" variability="discrete" causality="input">
-      <String start="" />
+      <String start="Static" />
     </ScalarVariable>
 
     <!--Index of variable = "15"-->
-    <ScalarVariable name="rout_dir" valueReference="14" variability="discrete" causality="output">
-      <String start="" />
+    <ScalarVariable name="rout_dir" valueReference="14" variability="discrete" causality="input">
+      <String start="C:\\Users\\marcu\\OneDrive\\Desktop\\test\\run_test\\Step_1" />
     </ScalarVariable>
 
     <!--Index of variable = "16"-->
@@ -101,8 +101,8 @@
     </ScalarVariable>
 
     <!--Index of variable = "19"-->
-    <ScalarVariable name="error" valueReference="18" variability="discrete" causality="output">
-      <Boolean start=False />
+    <ScalarVariable name="error" valueReference="18" variability="discrete" causality="input">
+      <Boolean start="false" />
     </ScalarVariable>
 
   </ModelVariables>

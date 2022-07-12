@@ -9,21 +9,21 @@ import numpy as np
 
 class Model:
     def __init__(self) -> None:
-        self.first_increment_value = 0.0
-        self.step_duration = 0.0
-        self.min_increment_value = 0.0
-        self.max_increment_value = 0.0
-        self.output_type = ""
-        self.disp_value =0.0
-        self.disp_node_set_name =""
-        self.fixed_node_set_name =""
-        self.first_degree_freedom =0
-        self.last_degree_freedom =0
-        self.total_steps =0
-        self.ccx_exe_path =""
-        self.work_dir =""
-        self.analysis_type =""
-        self.rout_dir=""
+        self.first_increment_value = 1e-5
+        self.step_duration = 1
+        self.min_increment_value = 1e-3
+        self.max_increment_value = 1e-1
+        self.output_type = "Disp"
+        self.disp_value =20
+        self.disp_node_set_name ="ConstraintDisplacement"
+        self.fixed_node_set_name ="ConstraintFixed"
+        self.first_degree_freedom =1
+        self.last_degree_freedom =1
+        self.total_steps =20
+        self.ccx_exe_path =r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
+        self.work_dir =r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
+        self.analysis_type ="Static"
+        self.rout_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
         self.dat_filename=""
         self.mass_matrix=""
         self.stiff_matrix=""
@@ -95,11 +95,10 @@ class Model:
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
         # New step folder path
-        new_path = os.path.join(self.work_dir, new_step_folder_name)
-
+        step_dir = os.path.join(self.work_dir, new_step_folder_name)
         # Create the directory if it doesn't already exist
         try:
-            os.mkdir(new_path)
+            os.mkdir(step_dir)
             for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
                 for file in files:
                     if file.endswith('.rout'):
@@ -109,18 +108,19 @@ class Model:
                         continue
                 break
             rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
-            shutil.copy(rout_path,new_path) #copy the file to the new folder
+            shutil.copyfile(rout_path,step_dir) #copy the file to the new folder
 
-            copied_rout_file = os.path.join(new_path,rout_file_name)#build the new path for the rout file
-            new_rin_file_name = os.path.join(new_path, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
+            copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
+            new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
 
             os.rename(copied_rout_file, new_rin_file_name)#rename
-            return new_path
+            self.rout_dir=step_dir
+            return step_dir
 
-        #If it does exist
+        #If it does exist, delete and replace it
         except OSError as error:
-            shutil.rmtree(new_path)
-            os.mkdir(new_path)
+            shutil.rmtree(step_dir)
+            os.mkdir(step_dir)
             for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
                 for file in files:
                     if file.endswith('.rout'):
@@ -130,15 +130,14 @@ class Model:
                         continue
                 break
             rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
-            shutil.copy(rout_path,new_path) #copy the file to the new folder
+            shutil.copyfile(rout_path,step_dir) #copy the file to the new folder
 
-            copied_rout_file = os.path.join(new_path,rout_file_name)#build the new path for the rout file
-            new_rin_file_name = os.path.join(new_path, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
+            copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
+            new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
 
             os.rename(copied_rout_file, new_rin_file_name)#rename
-            return new_path
-            # Fmi2Status.error
-            # print(error)
+            self.rout_dir=step_dir
+            return step_dir
 
 
     def new_step_inpfile_writer(self, step_dir,new_step_name):#needs a previous run, rename the last_step.rout into new_inp_file.rin
@@ -248,8 +247,10 @@ class Model:
             self.work_dir,
             self.rout_dir,
             self.dat_filename,
-            self.mass_matrix_filename,
-            self.stiff_matrix_filename
+            self.mass_matrix,
+            self.stiff_matrix,
+            self.analysis_type,
+            self.error
             )
         )
         return Fmi2Status.ok, bytes
@@ -270,8 +271,11 @@ class Model:
             work_dir,
             rout_dir,
             dat_filename,
-            mass_matrix_filename,
-            stiff_matrix_filename
+            mass_matrix,
+            stiff_matrix,
+            error,
+            analysis_type
+
 
         ) = pickle.loads(bytes)
 
@@ -288,11 +292,12 @@ class Model:
         self.total_steps =total_steps
         self.ccx_exe_path =ccx_exe_path
         self.work_dir =work_dir
-        self.first_inp_directory =first_inp_directory
+        self.analysis_type =analysis_type
         self.rout_dir=rout_dir
         self.dat_filename=dat_filename
-        self.mass_matrix_filename =mass_matrix_filename
-        self.stiff_matrix_filename =stiff_matrix_filename
+        self.mass_matrix=mass_matrix
+        self.stiff_matrix=stiff_matrix
+        self.error=error
 
         self._update_outputs()
 

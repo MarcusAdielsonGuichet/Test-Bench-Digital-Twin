@@ -8,6 +8,7 @@ import numpy as np
 ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
 work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
 first_inp_directory=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
+step_dir=r"C:\Users\marcu\OneDrive\Desktop\test\force_disp_dat"
 
 #test values
 [first_increment_value,step_duration,min_increment_value,max_increment_value]=[1E-8,1,1E-12,0.005]
@@ -201,6 +202,13 @@ def run_inp_file(ccx_exe_path,step_dir,new_step_name):
   if calculation_end not in output:
     error=True
   return output
+# 
+# 
+# 
+# try:
+#     shutil.rmtree(dir_path)
+# except OSError as e:
+#     print("Error: %s : %s" % (dir_path, e.strerror))
 
 
 # #verified and working, but obsolete if we use subprocess.run instead
