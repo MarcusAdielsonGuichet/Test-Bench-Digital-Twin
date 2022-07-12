@@ -1,14 +1,15 @@
 import re
 import numpy as np
 test =r"C:\Users\marcu\OneDrive\Desktop\test\force_disp_dat\force_disp_dat.dat"
+node_set_name="CONSTRAINTDISPLACEMENT"
 
-def get_disp(dat_filename):
+def get_disp(dat_filename, node_set_name):
     file=open(dat_filename,'r')
     result_disp=[]
     disp_section=False
     for line in file:
         if len(line.split())>1:
-            if line.split()[0]=="displacements":
+            if line.split()[0]=="displacements" and node_set_name in line:
                 disp_section=True
             if line.split()[0].isnumeric()==False and line.split()[0]!="displacements":
                 disp_section=False
@@ -18,13 +19,13 @@ def get_disp(dat_filename):
     file.close()#is this necessary?
     return result_disp
 
-def get_node_forces(dat_filename):
+def get_node_forces(dat_filename,node_set_name):
     file=open(dat_filename,'r')
     result_forces=[]
     node_force_section=False
     for line in file:
         if len(line.split())>1:
-            if line.split()[0]=="forces":
+            if line.split()[0]=="forces" and node_set_name in line:
                 node_force_section=True
             if line.split()[0].isnumeric()==False and line.split()[0]!="forces":
                 node_force_section=False
@@ -41,13 +42,13 @@ def isfloat(num):
     except ValueError:
         return False
 
-def get_force_sum(dat_filename):
+def get_force_sum(dat_filename,node_set_name):
     file=open(dat_filename,'r')
     forces_section=False
     result_force_sum=[]
     for line in file:
         if len(line.split())>1:
-            if "total force"in line:
+            if "total force" in line and node_set_name in line:
                 forces_section=True
             if isfloat(line.split()[0])==False and "total force" not in line:#works but not as wanted
                 forces_section=False
