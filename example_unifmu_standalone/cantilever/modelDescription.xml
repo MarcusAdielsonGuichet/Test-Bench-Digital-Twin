@@ -91,17 +91,17 @@
     </ScalarVariable>
 
     <!--Index of variable = "17"-->
-    <ScalarVariable name="mass_matrix_filename" valueReference="16" variability="discrete" causality="output">
+    <ScalarVariable name="mass_matrix" valueReference="16" variability="discrete" causality="output">
       <String start="" />
     </ScalarVariable>
 
     <!--Index of variable = "18"-->
-    <ScalarVariable name="stiff_matrix_filename" valueReference="17" variability="discrete" causality="output">
+    <ScalarVariable name="stiff_matrix" valueReference="17" variability="discrete" causality="output">
       <String start="" />
     </ScalarVariable>
 
     <!--Index of variable = "19"-->
-    <ScalarVariable name="stiff_matrix_filename" valueReference="18" variability="discrete" causality="input">
+    <ScalarVariable name="error" valueReference="18" variability="discrete" causality="output">
       <Boolean start=False />
     </ScalarVariable>
 
