@@ -76,7 +76,7 @@
     </ScalarVariable>
 
     <!--Index of variable = "14"-->
-    <ScalarVariable name="first_inp_directory" valueReference="13" variability="discrete" causality="input">
+    <ScalarVariable name="analysis_type" valueReference="13" variability="discrete" causality="input">
       <String start="" />
     </ScalarVariable>
 

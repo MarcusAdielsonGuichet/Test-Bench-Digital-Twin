@@ -148,7 +148,7 @@ class Model:
         if self.output_type=="Disp":
             new_inp.write("\nU\n")
         elif self.output_type=="Force":
-            new_inp.write(",Totals=Only\nRF\n")
+            new_inp.write(",Totals=Yes\nRF\n")
 
         new_inp.write("*END STEP\n")
 
