@@ -22,11 +22,11 @@ class Model:
         self.total_steps =0
         self.ccx_exe_path =""
         self.work_dir =""
-        self.first_inp_directory ="" #redundant
+        self.analysis_type =""
         self.rout_dir=""
         self.dat_filename=""
-        self.mass_matrix_filename =""
-        self.stiff_matrix_filename =""
+        self.mass_matrix=""
+        self.stiff_matrix=""
         self.error=False
 
 
@@ -44,30 +44,30 @@ class Model:
             10: "total_steps",
             11: "ccx_exe_path",
             12: "work_dir",
-            13: "first_inp_directory",#redundant
+            13: "analysis_type",
             14: "rout_dir",
             15: "dat_filename",
-            16: "mass_matrix_filename",
-            17: "stiff_matrix_filename",
+            16: "mass_matrix",
+            17: "stiff_matrix",
             18: "error"
         }
 
         self._update_outputs()
 
     def fmi2DoStep(self, current_time, step_size, no_step_prior):
-        #3 use cases:
-            #First step, so no need for the rout/rin function
+        #Use cases:
+            #First step without error
+            #First step with error(wrong inp name usually)
             #Nth step without error
-            #Nth step with error
+            #Nth step with error, due to existing dir from previous run, wrong inp, step characteristics not compatible with exp,
         if self.error==False:
             if no_step_prior==0:
                 #Finding the inp file
-                step_dir=self.first_inp_directory
+                step_dir=self.rout_dir
                 for root, dirs, files in os.walk(step_dir):
                     for file in files:
                         if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
                             new_step_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
-                            # inp_file_path=os.path.join(first_inp_directory,file)
                             break
                         else:
                             continue
@@ -116,9 +116,29 @@ class Model:
 
             os.rename(copied_rout_file, new_rin_file_name)#rename
             return new_path
+
+        #If it does exist
         except OSError as error:
-            Fmi2Status.error
-            print(error)
+            shutil.rmtree(new_path)
+            os.mkdir(new_path)
+            for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
+                for file in files:
+                    if file.endswith('.rout'):
+                        rout_file_name=file
+                        break
+                    else:
+                        continue
+                break
+            rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
+            shutil.copy(rout_path,new_path) #copy the file to the new folder
+
+            copied_rout_file = os.path.join(new_path,rout_file_name)#build the new path for the rout file
+            new_rin_file_name = os.path.join(new_path, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
+
+            os.rename(copied_rout_file, new_rin_file_name)#rename
+            return new_path
+            # Fmi2Status.error
+            # print(error)
 
 
     def new_step_inpfile_writer(self, step_dir,new_step_name):#needs a previous run, rename the last_step.rout into new_inp_file.rin
@@ -129,7 +149,7 @@ class Model:
 
         #Step characteristics and analysis type
         new_inp.write("*STEP, INC=1000000\n")
-        new_inp.write("*STATIC\n")
+        new_inp.write(f"*{self.analysis_type}\n")
         new_inp.write(f"{self.first_increment_value},{self.step_duration},{self.min_increment_value},{self.max_increment_value}\n")
 
         #Saving the calculation for next step
@@ -307,37 +327,60 @@ class Model:
         self.dat_filename =""
         self.rout_filename =""
 
-    def get_disp(filename):#verified and running 08/07/2022
-        file=open(filename,'r')
+    def get_disp(dat_filename, node_set_name):
+        file=open(dat_filename,'r')
         result_disp=[]
-        for i, line in enumerate(file):
-            if i>=3:
-                node_disp_values=[]
-                #Node number
-                node_disp_values.append(int(line[:10].strip()))
-                #Ux
-                node_disp_values.append(float(line[12:24].strip()))
-                #Uy
-                node_disp_values.append(float(line[26:39].strip()))
-                #Uz
-                node_disp_values.append(float(line[40:].strip()))
-                result_disp.append(node_disp_values)
+        disp_section=False
+        for line in file:
+            if len(line.split())>1:
+                if line.split()[0]=="displacements" and node_set_name in line:
+                    disp_section=True
+                if line.split()[0].isnumeric()==False and line.split()[0]!="displacements":
+                    disp_section=False
+                if disp_section==True and line.split()[0].isnumeric():#Verfication for non-blank lines and disp section
+                    node_nb,ux,uy,uz=int(line.split()[0]),float(line.split()[1]),float(line.split()[2]),float(line.split()[3])
+                    result_disp.append([node_nb,ux,uy,uz])
+        file.close()#is this necessary?
         return result_disp
 
-    def get_forces(dat_filename):
+    def get_node_forces(dat_filename,node_set_name):
         file=open(dat_filename,'r')
-        for i, line in enumerate(file):
-            if i>=3:
-                result_forces_values=[]
-                #Fx
-                result_forces_values.append(float(line[3:21].strip()))
-                #Fy
-                result_forces_values.append(float(line[22:34].strip()))
-                #Fz
-                result_forces_values.append(float(line[35:].strip()))
-                break
+        result_forces=[]
+        node_force_section=False
+        for line in file:
+            if len(line.split())>1:
+                if line.split()[0]=="forces" and node_set_name in line:
+                    node_force_section=True
+                if line.split()[0].isnumeric()==False and line.split()[0]!="forces":
+                    node_force_section=False
+                if node_force_section==True and line.split()[0].isnumeric():#Verfication for non-blank lines and disp section
+                    node_nb,fx,fy,fz=int(line.split()[0]),float(line.split()[1]),float(line.split()[2]),float(line.split()[3])
+                    result_forces.append([node_nb,fx,fy,fz])
         file.close()#is this necessary?
-        return result_forces_values
+        return result_forces
+
+    def isfloat(num):
+        try:
+            float(num)
+            return True
+        except ValueError:
+            return False
+
+    def get_force_sum(dat_filename,node_set_name):
+        file=open(dat_filename,'r')
+        forces_section=False
+        result_force_sum=[]
+        for line in file:
+            if len(line.split())>1:
+                if "total force" in line and node_set_name in line:
+                    forces_section=True
+                if isfloat(line.split()[0])==False and "total force" not in line:#works but not as wanted
+                    forces_section=False
+                if forces_section==True and isfloat(line.split()[0]):#Verfication for non-blank lines and disp section
+                    fx,fy,fz=float(line.split()[0]),float(line.split()[1]),float(line.split()[2])
+                    result_force_sum.append([fx,fy,fz])
+        file.close()#is this necessary?
+        return result_force_sum
 
     def get_mass_matrix(mas_filename):
         file=open(mas_filename,'r')
@@ -400,7 +443,7 @@ class Fmi2Status:
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
     import random
 
     # create FMU
@@ -417,14 +460,15 @@ if __name__ == "__main__":
 
     fea.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
     fea.work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
-    fea.rout_dir=fea.first_inp_directory=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
+    fea.rout_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
 
 
 
     fea.output_type="Disp"
     fea.disp_node_set_name="ConstraintDisplacement"
     fea.fixed_node_set_name="ConstraintFixed"
-    fea.first_degree_freedom=fea.last_degree_freedom=1#constraints on the x axis
+    fea.analysis_type="Static"
+    fea.first_degree_freedom=fea.last_degree_freedom=1 #constraints on the x axis
     fea.total_steps=20
 
     # output
@@ -434,7 +478,6 @@ if __name__ == "__main__":
 
         fea.disp_value = u[no_step_prior]
         fea.fmi2DoStep(1,1, no_step_prior)
-        #run_inp_file(self.ccx_exe_path,step_dir,new_step_name)
 
     # plt.plot(t, RN)
     # plt.ylabel("RN")
