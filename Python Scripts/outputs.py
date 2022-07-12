@@ -18,6 +18,22 @@ def get_disp(dat_filename):
     file.close()#is this necessary?
     return result_disp
 
+def get_node_forces(dat_filename):
+    file=open(dat_filename,'r')
+    result_forces=[]
+    node_force_section=False
+    for line in file:
+        if len(line.split())>1:
+            if line.split()[0]=="forces":
+                node_force_section=True
+            if line.split()[0].isnumeric()==False and line.split()[0]!="forces":
+                node_force_section=False
+            if node_force_section==True and line.split()[0].isnumeric():#Verfication for non-blank lines and disp section
+                node_nb,fx,fy,fz=int(line.split()[0]),float(line.split()[1]),float(line.split()[2]),float(line.split()[3])
+                result_forces.append([node_nb,fx,fy,fz])
+    file.close()#is this necessary?
+    return result_forces
+
 def isfloat(num):
     try:
         float(num)
@@ -25,22 +41,21 @@ def isfloat(num):
     except ValueError:
         return False
 
-def get_forces(dat_filename):
+def get_force_sum(dat_filename):
     file=open(dat_filename,'r')
     forces_section=False
-    result_force=[]
-    force_sum=[]
+    result_force_sum=[]
     for line in file:
         if len(line.split())>1:
-            if "forces"in line:
+            if "total force"in line:
                 forces_section=True
-            if isfloat(line.split()[0])==False and "forces" not in line:#works but not as wanted
+            if isfloat(line.split()[0])==False and "total force" not in line:#works but not as wanted
                 forces_section=False
             if forces_section==True and isfloat(line.split()[0]):#Verfication for non-blank lines and disp section
                 fx,fy,fz=float(line.split()[0]),float(line.split()[1]),float(line.split()[2])
-                result_force.append([fx,fy,fz])
+                result_force_sum.append([fx,fy,fz])
     file.close()#is this necessary?
-    return result_force
+    return result_force_sum
 
 
 
