@@ -4,11 +4,12 @@ import shutil
 import glob
 import subprocess
 import numpy as np
+import tempfile
 
 ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
-work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
-first_inp_directory=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
-step_dir=r"C:\Users\marcu\OneDrive\Desktop\test\force_disp_dat"
+work_dir=tempfile.mkdtemp()
+rout_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
+# step_dir=r"C:\Users\marcu\OneDrive\Desktop\test\force_disp_dat"
 
 #test values
 [first_increment_value,step_duration,min_increment_value,max_increment_value]=[1E-8,1,1E-12,0.005]
@@ -21,13 +22,13 @@ total_steps=20
 
 #The first inp step file is written by hand, later iterations will use the gmesh converter directly.
 #Verified with comented section, takes 1-2 min for 20 steps with matrix generations and same values of disp for each step, however last folder stays active in the manager so need to kill the process once over
-def run_simulation(ccx_exe_path,work_dir,first_inp_directory):
-  os.chdir(first_inp_directory)
-  for root, dirs, files in os.walk(first_inp_directory):
+def run_simulation(ccx_exe_path,work_dir,rout_dir):
+  os.chdir(rout_dir)
+  for root, dirs, files in os.walk(rout_dir):
     for file in files:
       if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
         inp_file_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
-        inp_file_path=os.path.join(first_inp_directory,file)
+        inp_file_path=os.path.join(rout_dir,file)
         break
     else:
       continue
@@ -45,8 +46,7 @@ def run_simulation(ccx_exe_path,work_dir,first_inp_directory):
     return output
   else:
     error=False
-    rout_file_dir=first_inp_directory
-    step_dir=first_inp_directory
+    step_dir=rout_dir
     # disp_node_set_name,
     # first_degree_freedom,
     # last_degree_freedom=get_disp_characteristics(inp_file_path)#need to read the inp file and extract the corresponding values and names
@@ -101,13 +101,13 @@ def update_inputs(other_fmu):
   return first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type,new_disp_value
   
 #verified and working
-def copy_rename_rout_to_rin(work_dir,rout_file_dir,new_step_folder_name, new_step_name):
+def copy_rename_rout_to_rin(work_dir,rout_dir,new_step_folder_name, new_step_name):
   # New step folder path
-  new_path = os.path.join(work_dir, new_step_folder_name)
+  step_dir = os.path.join(work_dir, new_step_folder_name)
   # Create the directory
   try:
-    os.mkdir(new_path)
-    for root, dirs, files in os.walk(rout_file_dir):#search inside the dir
+    os.mkdir(step_dir)
+    for root, dirs, files in os.walk(rout_dir):#search inside the dir
       for file in files:
           if file.endswith('.rout'):
               rout_file_name=file
@@ -116,15 +116,33 @@ def copy_rename_rout_to_rin(work_dir,rout_file_dir,new_step_folder_name, new_ste
         continue
       break
     rout_path = os.path.join(rout_file_dir, rout_file_name)#build the complete path for the rout file
-    shutil.copy(rout_path,new_path) #copy the file to the new folder
+    shutil.copy(rout_path,step_dir) #copy the file to the new folder
 
-    copied_rout_file = os.path.join(new_path,rout_file_name)#build the new path for the rout file
-    new_rin_file_name = os.path.join(new_path, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name 
+    copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
+    new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name 
 
     os.rename(copied_rout_file, new_rin_file_name)#rename
     return new_path
-  except OSError as error:
-    print(error)
+  except: #OSError as error:
+      shutil.rmtree(step_dir)
+      os.mkdir(step_dir)
+      for root, dirs, files in os.walk(rout_dir):#search inside the dir for the rout file
+          for file in files:
+              if file.endswith('.rout'):
+                  rout_file_name=file
+                  break
+              else:
+                  continue
+          break
+      rout_path = os.path.join(rout_dir, rout_file_name)#build the complete path for the rout file
+      shutil.copy(rout_path,step_dir) #copy the file to the new folder
+
+      copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
+      new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
+
+      os.rename(copied_rout_file, new_rin_file_name)#rename
+      rout_dir=step_dir
+      return step_dir
 
 #verified and working
 def new_step_inpfile_writer(step_dir,first_increment_value,step_duration,min_increment_value,max_increment_value,new_step_name,output_type):#needs a previous run, rename the last_step.rout into new_inp_file.rin 
@@ -165,13 +183,13 @@ def new_step_inpfile_writer(step_dir,first_increment_value,step_duration,min_inc
   new_inp.close()
 
 #verified and functional
-def runtest(ccx_exe_path,work_dir,first_inp_directory):
-  os.chdir(first_inp_directory)
-  for root, dirs, files in os.walk(first_inp_directory):
+def runtest(ccx_exe_path,work_dir,rout_dir):
+  os.chdir(rout_dir)
+  for root, dirs, files in os.walk(rout_dir):
     for file in files:
       if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
         inp_file_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
-        inp_file_path=os.path.join(first_inp_directory,file)
+        inp_file_path=os.path.join(rout_dir,file)
         break
     else:
       continue
@@ -202,7 +220,8 @@ def run_inp_file(ccx_exe_path,step_dir,new_step_name):
   if calculation_end not in output:
     error=True
   return output
-# 
+
+
 # 
 # 
 # try:
@@ -216,13 +235,13 @@ def run_inp_file(ccx_exe_path,step_dir,new_step_name):
 #   os.chdir(step_dir)
 #   os.system(ccx_exe_path+" "+new_step_name)
 #   
-# def runtest(ccx_exe_path,work_dir,first_inp_directory):
-#   os.chdir(first_inp_directory)
-#   for root, dirs, files in os.walk(first_inp_directory):
+# def runtest(ccx_exe_path,work_dir,rout_dir):
+#   os.chdir(rout_dir)
+#   for root, dirs, files in os.walk(rout_dir):
 #     for file in files:
 #       if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
 #         inp_file_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
-#         inp_file_path=os.path.join(first_inp_directory,file)
+#         inp_file_path=os.path.join(rout_dir,file)
 #         break
 #     else:
 #       continue
@@ -231,7 +250,7 @@ def run_inp_file(ccx_exe_path,step_dir,new_step_name):
 #   # run solver
 #   _process = subprocess.Popen(
 #       [ccx_exe_path,"-i",inp_file_name],
-#       cwd=first_inp_directory,
+#       cwd=rout_dir,
 #       stdout=subprocess.PIPE,
 #       stderr=subprocess.PIPE
 #   )
