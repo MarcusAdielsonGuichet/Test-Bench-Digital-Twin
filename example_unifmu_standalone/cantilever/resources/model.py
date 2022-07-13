@@ -5,6 +5,7 @@ import shutil
 import glob
 import subprocess
 import numpy as np
+import tempfile
 
 
 class Model:
@@ -60,6 +61,7 @@ class Model:
             #First step with error(wrong inp name usually)
             #Nth step without error
             #Nth step with error, due to existing dir from previous run, wrong inp, step characteristics not compatible with exp,
+        self.work_dir=tempfile.mkdtemp()
         if self.error==False:
             if no_step_prior==0:
                 #Finding the inp file
@@ -108,7 +110,7 @@ class Model:
                         continue
                 break
             rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
-            shutil.copyfile(rout_path,step_dir) #copy the file to the new folder
+            shutil.copy(rout_path,step_dir) #copy the file to the new folder
 
             copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
             new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
@@ -118,7 +120,7 @@ class Model:
             return step_dir
 
         #If it does exist, delete and replace it
-        except OSError as error:
+        except: #OSError as error:
             shutil.rmtree(step_dir)
             os.mkdir(step_dir)
             for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
@@ -130,7 +132,7 @@ class Model:
                         continue
                 break
             rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
-            shutil.copyfile(rout_path,step_dir) #copy the file to the new folder
+            shutil.copy(rout_path,step_dir) #copy the file to the new folder
 
             copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
             new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
@@ -480,9 +482,9 @@ if __name__ == "__main__":
     #RN = np.zeros(step)
 
     for no_step_prior in range(fea.total_steps):
-
         fea.disp_value = u[no_step_prior]
         fea.fmi2DoStep(1,1, no_step_prior)
+        print(fea.work_dir)
 
     # plt.plot(t, RN)
     # plt.ylabel("RN")
