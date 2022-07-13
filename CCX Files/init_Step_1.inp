@@ -3720,9 +3720,8 @@ U
 S, E
 ** outputs --> dat file
 ** reaction forces for Constraint fixed
-*NODE PRINT, NSET=ConstraintFixed, Totals=Yes
+*NODE PRINT, NSET=ConstraintDisplacement, Totals=Yes
 RF
-
 
 ***********************************************************
 ** written by write_step_end function
