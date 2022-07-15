@@ -62,12 +62,10 @@ class Model:
             #Nth step without error
             #Nth step with error, due to existing dir from previous run, wrong inp, step characteristics not compatible with exp,
         #self.work_dir=tempfile.mkdtemp()
-        #global step_dir
         if self.error==False:
             if self.total_steps==0:#Boolean acoording to Claudio, not Integer
                 #Finding the inp file
                 step_dir=self.rout_dir
-                #self.work_dir=r"C:\Users\marcu\AppData\Local\Temp"
                 for root, dirs, files in os.walk(step_dir):
                     for file in files:
                         if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
@@ -77,8 +75,8 @@ class Model:
                             continue
                     break
             elif self.total_steps>0:#Boolean acoording to Claudio, not Integer
-                new_step_folder_name=f"Step_{no_step_prior+1}"
-                new_step_name=f"init_Step_{no_step_prior+1}"
+                new_step_folder_name=f"Step_{self.total_steps+1}"
+                new_step_name=f"init_Step_{self.total_steps+1}"
 
                 #Necessary procedure for the *RESTART function, check ccx manual for more info
                 step_dir=self.copy_rename_rout_to_rin(new_step_folder_name,new_step_name)
@@ -100,10 +98,10 @@ class Model:
             return Fmi2Status.error
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
-        global rout_file_name
         #self.work_dir=tempfile.mkdtemp()
         # New step folder path
         #print(os.getcwd())
+        global rout_file_name
         step_dir = os.path.join(self.work_dir, new_step_folder_name)
         # Create the directory if it doesn't already exist
         try:
@@ -117,6 +115,7 @@ class Model:
                         continue
                 break
             rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
+            print("First step no previous run")
             shutil.copy(rout_path,step_dir) #copy the file to the new folder
 
             copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
@@ -124,21 +123,24 @@ class Model:
 
             os.rename(copied_rout_file, new_rin_file_name)#rename
             self.rout_dir=step_dir
+            print (f"First step no previous run {self.rout_dir}")
             return step_dir
 
         #If it does exist, delete and replace it
-        except: #OSError as error:
+        except OSError as error:
             shutil.rmtree(step_dir, ignore_errors=True)
             os.mkdir(step_dir)
             for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
                 for file in files:
                     if file.endswith('.rout'):
                         rout_file_name=file
+                        print(rout_file_name)
                         break
                     else:
                         continue
                 break
             rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
+            print(rout_path)
             shutil.copy(rout_path,step_dir) #copy the file to the new folder
 
             copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
@@ -146,6 +148,7 @@ class Model:
 
             os.rename(copied_rout_file, new_rin_file_name)#rename
             self.rout_dir=step_dir
+            print (self.rout_dir)
             return step_dir
 
 
