@@ -62,7 +62,7 @@
 
     <!--Index of variable = "11"-->
     <ScalarVariable name="total_steps" valueReference="10" variability="discrete" causality="input">
-      <Integer start="20" />
+      <Integer start="0" />
     </ScalarVariable>
 
     <!--Index of variable = "12"-->
@@ -72,7 +72,7 @@
 
     <!--Index of variable = "13"-->
     <ScalarVariable name="work_dir" valueReference="12" variability="discrete" causality="input">
-      <String start="C:\\Users\\marcu\\OneDrive\\Desktop\\test\\run_test" />
+      <String start="C:\\internship_github\\Python-code-for-Test-Bench-Digital-Twin\\CCX Files\\test_runs" />
     </ScalarVariable>
 
     <!--Index of variable = "14"-->
@@ -82,7 +82,7 @@
 
     <!--Index of variable = "15"-->
     <ScalarVariable name="rout_dir" valueReference="14" variability="discrete" causality="input">
-      <String start="C:\\Users\\marcu\\OneDrive\\Desktop\\test\\run_test\\Step_1" />
+      <String start="C:\\internship_github\\Python-code-for-Test-Bench-Digital-Twin\\CCX Files\\test_runs\\Step_1" />
     </ScalarVariable>
 
     <!--Index of variable = "16"-->
