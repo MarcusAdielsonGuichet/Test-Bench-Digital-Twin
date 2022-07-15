@@ -20,11 +20,11 @@ class Model:
         self.fixed_node_set_name ="ConstraintFixed"
         self.first_degree_freedom =1
         self.last_degree_freedom =1
-        self.total_steps =20
+        self.total_steps =0
         self.ccx_exe_path =r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
-        self.work_dir =r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
+        self.work_dir =r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
         self.analysis_type ="Static"
-        self.rout_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
+        self.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"
         self.dat_filename=""
         self.mass_matrix=""
         self.stiff_matrix=""
@@ -61,11 +61,13 @@ class Model:
             #First step with error(wrong inp name usually)
             #Nth step without error
             #Nth step with error, due to existing dir from previous run, wrong inp, step characteristics not compatible with exp,
-        self.work_dir=tempfile.mkdtemp()
+        #self.work_dir=tempfile.mkdtemp()
+        #global step_dir
         if self.error==False:
-            if no_step_prior==0:
+            if self.total_steps==0:#Boolean acoording to Claudio, not Integer
                 #Finding the inp file
                 step_dir=self.rout_dir
+                #self.work_dir=r"C:\Users\marcu\AppData\Local\Temp"
                 for root, dirs, files in os.walk(step_dir):
                     for file in files:
                         if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
@@ -74,7 +76,7 @@ class Model:
                         else:
                             continue
                     break
-            elif no_step_prior>0:
+            elif self.total_steps>0:#Boolean acoording to Claudio, not Integer
                 new_step_folder_name=f"Step_{no_step_prior+1}"
                 new_step_name=f"init_Step_{no_step_prior+1}"
 
@@ -86,6 +88,8 @@ class Model:
             out=self.run_inp_file(step_dir,new_step_name)
             if "Job finished" in out:
                 #self._update_outputs()#need to modify this with the actual outputs
+                #no_step_prior+=1
+                self.total_steps+=1
                 return Fmi2Status.ok
             else:
                 self.error=True
@@ -96,7 +100,10 @@ class Model:
             return Fmi2Status.error
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
+        global rout_file_name
+        #self.work_dir=tempfile.mkdtemp()
         # New step folder path
+        #print(os.getcwd())
         step_dir = os.path.join(self.work_dir, new_step_folder_name)
         # Create the directory if it doesn't already exist
         try:
@@ -121,7 +128,7 @@ class Model:
 
         #If it does exist, delete and replace it
         except: #OSError as error:
-            shutil.rmtree(step_dir)
+            shutil.rmtree(step_dir, ignore_errors=True)
             os.mkdir(step_dir)
             for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
                 for file in files:
@@ -187,6 +194,7 @@ class Model:
             check=True,
             encoding='utf-8'
         ).stdout
+        os.chdir(self.work_dir)
         if "Job finished" not in output:
             self.error=True
         return output
@@ -466,8 +474,8 @@ if __name__ == "__main__":
     print(u)
 
     fea.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
-    fea.work_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test"
-    fea.rout_dir=r"C:\Users\marcu\OneDrive\Desktop\test\run_test\Step_1"
+    fea.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
+    fea.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"
 
 
 
@@ -476,16 +484,14 @@ if __name__ == "__main__":
     fea.fixed_node_set_name="ConstraintFixed"
     fea.analysis_type="Static"
     fea.first_degree_freedom=fea.last_degree_freedom=1 #constraints on the x axis
-    fea.total_steps=20
+    fea.total_steps=0
 
     # output
     #RN = np.zeros(step)
 
-    for no_step_prior in range(fea.total_steps):
+    for no_step_prior in range(4):
         fea.disp_value = u[no_step_prior]
         fea.fmi2DoStep(1,1, no_step_prior)
-        print(fea.work_dir)
-
     # plt.plot(t, RN)
     # plt.ylabel("RN")
     # plt.xlabel("t")
