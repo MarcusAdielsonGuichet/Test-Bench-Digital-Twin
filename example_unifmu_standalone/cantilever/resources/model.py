@@ -20,7 +20,7 @@ class Model:
         self.fixed_node_set_name ="ConstraintFixed"
         self.first_degree_freedom =1
         self.last_degree_freedom =1
-        self.total_steps =0
+        self.nb_steps_prior =0
         self.ccx_exe_path =r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
         self.work_dir =r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
         self.analysis_type ="Static"
@@ -29,6 +29,7 @@ class Model:
         self.mass_matrix=""
         self.stiff_matrix=""
         self.error=False
+        self.total_steps=20
 
 
         self.reference_to_attribute = {
@@ -42,7 +43,7 @@ class Model:
             7: "fixed_node_set_name",
             8: "first_degree_freedom",
             9: "last_degree_freedom",
-            10: "total_steps",
+            10: "nb_steps_prior",
             11: "ccx_exe_path",
             12: "work_dir",
             13: "analysis_type",
@@ -50,7 +51,8 @@ class Model:
             15: "dat_filename",
             16: "mass_matrix",
             17: "stiff_matrix",
-            18: "error"
+            18: "error",
+            19: "total_steps"
         }
 
         self._update_outputs()
@@ -63,144 +65,55 @@ class Model:
             #Nth step with error, due to existing dir from previous run, wrong inp, step characteristics not compatible with exp,
         #self.work_dir=tempfile.mkdtemp()
         if self.error==False:
-            if self.total_steps==0:#Boolean acoording to Claudio, not Integer
-                #Finding the inp file
-                step_dir=self.rout_dir
-                for root, dirs, files in os.walk(step_dir):
-                    for file in files:
-                        if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
-                            new_step_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
-                            break
-                        else:
-                            continue
-                    break
-            elif self.total_steps>0:#Boolean acoording to Claudio, not Integer
-                new_step_folder_name=f"Step_{self.total_steps+1}"
-                new_step_name=f"init_Step_{self.total_steps+1}"
+            if self.nb_steps_prior<= self.total_steps-1:
 
-                #Necessary procedure for the *RESTART function, check ccx manual for more info
-                step_dir=self.copy_rename_rout_to_rin(new_step_folder_name,new_step_name)
+                if self.nb_steps_prior==0:#Checking for the first step
+                    #Finding the inp file
+                    step_dir=self.rout_dir
+                    for root, dirs, files in os.walk(step_dir):
+                        for file in files:
+                            if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
+                                new_step_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
+                                break
+                            else:
+                                continue
+                        break
 
-                #Generate and run the new step inp
-                self.new_step_inpfile_writer(step_dir,new_step_name)
-            out=self.run_inp_file(step_dir,new_step_name)
-            if "Job finished" in out:
-                #self._update_outputs()#need to modify this with the actual outputs
-                #no_step_prior+=1
-                self.total_steps+=1
-                return Fmi2Status.ok
+
+                elif self.nb_steps_prior>0:#Nth step check
+                    new_step_folder_name=f"Step_{self.nb_steps_prior+1}"#Step directory name
+                    new_step_name=f"init_Step_{self.nb_steps_prior+1}"#Step inp file name
+
+                    #Necessary procedure for the *RESTART function, check ccx manual for more info
+                    step_dir=self.copy_rename_rout_to_rin(new_step_folder_name,new_step_name)
+
+                    #Generate the step inp file
+                    self.step_inpfile_writer(step_dir,new_step_name)
+
+
+                out=self.run_inp_file(step_dir,new_step_name)
+
+
+                if "Job finished" in out:
+                    #self._update_outputs()#need to modify this with the actual outputs
+                    #no_step_prior+=1
+                    self.nb_steps_prior+=1
+                    if self.nb_steps_prior< self.total_steps:
+                        print(f"\nStep {self.nb_steps_prior} done\nMoving on to Step {self.nb_steps_prior+1}...\n")
+                    elif self.nb_steps_prior==self.total_steps:
+                        print(f"Step {self.nb_steps_prior} done\n\nSimulation run complete with no errors")
+                    return Fmi2Status.ok
+                else:
+                    self.error=True
+                    #Can I do this? Or better to write error function?
+                    return Fmi2Status.error, out
             else:
-                self.error=True
-                #Can I do this? Or better to write error function?
-                return Fmi2Status.error, out
+                print("Simulation done")
+                return Fmi2Status.ok
         else:
             #weird use case, needs tests first
             return Fmi2Status.error
 
-    def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
-        #self.work_dir=tempfile.mkdtemp()
-        # New step folder path
-        #print(os.getcwd())
-        global rout_file_name
-        step_dir = os.path.join(self.work_dir, new_step_folder_name)
-        # Create the directory if it doesn't already exist
-        try:
-            os.mkdir(step_dir)
-            for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
-                for file in files:
-                    if file.endswith('.rout'):
-                        rout_file_name=file
-                        break
-                    else:
-                        continue
-                break
-            rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
-            print("First step no previous run")
-            shutil.copy(rout_path,step_dir) #copy the file to the new folder
-
-            copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
-            new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
-
-            os.rename(copied_rout_file, new_rin_file_name)#rename
-            self.rout_dir=step_dir
-            print (f"First step no previous run {self.rout_dir}")
-            return step_dir
-
-        #If it does exist, delete and replace it
-        except OSError as error:
-            shutil.rmtree(step_dir, ignore_errors=True)
-            os.mkdir(step_dir)
-            for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
-                for file in files:
-                    if file.endswith('.rout'):
-                        rout_file_name=file
-                        print(rout_file_name)
-                        break
-                    else:
-                        continue
-                break
-            rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
-            print(rout_path)
-            shutil.copy(rout_path,step_dir) #copy the file to the new folder
-
-            copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
-            new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
-
-            os.rename(copied_rout_file, new_rin_file_name)#rename
-            self.rout_dir=step_dir
-            print (self.rout_dir)
-            return step_dir
-
-
-    def new_step_inpfile_writer(self, step_dir,new_step_name):#needs a previous run, rename the last_step.rout into new_inp_file.rin
-
-        new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
-        #Continuing the previous step calculation
-        new_inp.write("*RESTART, READ\n")
-
-        #Step characteristics and analysis type
-        new_inp.write("*STEP, INC=1000000\n")
-        new_inp.write(f"*{self.analysis_type}\n")
-        new_inp.write(f"{self.first_increment_value},{self.step_duration},{self.min_increment_value},{self.max_increment_value}\n")
-
-        #Saving the calculation for next step
-        new_inp.write("*RESTART, WRITE\n")
-
-        #Displaced nodes characteristics, add force loads?
-        new_inp.write("*BOUNDARY\n")
-        new_inp.write(f"{self.disp_node_set_name},{self.first_degree_freedom},{self.last_degree_freedom},{self.disp_value}\n")
-
-        #Fixed nodes
-        new_inp.write("*BOUNDARY\n")
-        new_inp.write(f"{self.fixed_node_set_name},1,6,0\n")
-
-        #Output files and values
-        new_inp.write(f"*NODE PRINT, NSET={self.disp_node_set_name}")
-        if self.output_type=="Disp":
-            new_inp.write("\nU\n")
-        elif self.output_type=="Force":
-            new_inp.write(",Totals=Yes\nRF\n")
-
-        new_inp.write("*END STEP\n")
-
-        #Mass and stiffness storage
-        new_inp.write("*STEP\n")
-        new_inp.write("*FREQUENCY, SOLVER=MATRIXSTORAGE\n")
-        new_inp.write("*END STEP")
-        new_inp.close()
-
-    def run_inp_file(self,step_dir,new_step_name):
-        os.chdir(step_dir)
-        output=subprocess.run(
-            [self.ccx_exe_path,"-i",new_step_name],
-            capture_output=True,
-            check=True,
-            encoding='utf-8'
-        ).stdout
-        os.chdir(self.work_dir)
-        if "Job finished" not in output:
-            self.error=True
-        return output
 
     def fmi2EnterInitializationMode(self):
         return Fmi2Status.ok
@@ -255,7 +168,7 @@ class Model:
             self.disp_node_set_name,
             self.fixed_node_set_name,
             self.last_degree_freedom,
-            self.total_steps,
+            self.nb_steps_prior,
             self.ccx_exe_path,
             self.work_dir,
             self.rout_dir,
@@ -279,7 +192,7 @@ class Model:
             disp_node_set_name,
             fixed_node_set_name,
             last_degree_freedom,
-            total_steps,
+            nb_steps_prior,
             ccx_exe_path,
             work_dir,
             rout_dir,
@@ -302,7 +215,7 @@ class Model:
         self.fixed_node_set_name =fixed_node_set_name
         self.first_degree_freedom =first_degree_freedom
         self.last_degree_freedom =last_degree_freedom
-        self.total_steps =total_steps
+        self.nb_steps_prior =nb_steps_prior
         self.ccx_exe_path =ccx_exe_path
         self.work_dir =work_dir
         self.analysis_type =analysis_type
@@ -344,6 +257,106 @@ class Model:
         self.stiff_matrix_filename =""
         self.dat_filename =""
         self.rout_filename =""
+
+    def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
+        #self.work_dir=tempfile.mkdtemp()
+        # New step folder path
+        #print(os.getcwd())
+        global rout_file_name
+        step_dir = os.path.join(self.work_dir, new_step_folder_name)
+        # Create the directory if it doesn't already exist
+        try:
+            os.mkdir(step_dir)
+            for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
+                for file in files:
+                    if file.endswith('.rout'):
+                        rout_file_name=file
+                        break
+                    else:
+                        continue
+                break
+            rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
+            shutil.copy(rout_path,step_dir) #copy the file to the new folder
+
+            copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
+            new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
+
+            os.rename(copied_rout_file, new_rin_file_name)#rename
+            self.rout_dir=step_dir
+            return step_dir
+
+        #If it does exist, delete and replace it
+        except OSError as error:
+            shutil.rmtree(step_dir, ignore_errors=True)
+            os.mkdir(step_dir)
+            for root, dirs, files in os.walk(self.rout_dir):#search inside the dir for the rout file
+                for file in files:
+                    if file.endswith('.rout'):
+                        rout_file_name=file
+                        break
+                    else:
+                        continue
+                break
+            rout_path = os.path.join(self.rout_dir, rout_file_name)#build the complete path for the rout file
+            shutil.copy(rout_path,step_dir) #copy the file to the new folder
+
+            copied_rout_file = os.path.join(step_dir,rout_file_name)#build the new path for the rout file
+            new_rin_file_name = os.path.join(step_dir, new_step_name+".rin")#define the new step file name, this name must be the same as the inp file, here new_step_name
+
+            os.rename(copied_rout_file, new_rin_file_name)#rename
+            self.rout_dir=step_dir
+            return step_dir
+
+
+    def step_inpfile_writer(self, step_dir,new_step_name):#needs a previous run, rename the last_step.rout into new_inp_file.rin
+
+        new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
+        #Continuing the previous step calculation
+        new_inp.write("*RESTART, READ\n")
+
+        #Step characteristics and analysis type
+        new_inp.write("*STEP, INC=1000000\n")
+        new_inp.write(f"*{self.analysis_type}\n")
+        new_inp.write(f"{self.first_increment_value},{self.step_duration},{self.min_increment_value},{self.max_increment_value}\n")
+
+        #Saving the calculation for next step
+        new_inp.write("*RESTART, WRITE\n")
+
+        #Displaced nodes characteristics, add force loads?
+        new_inp.write("*BOUNDARY\n")
+        new_inp.write(f"{self.disp_node_set_name},{self.first_degree_freedom},{self.last_degree_freedom},{self.disp_value}\n")
+
+        #Fixed nodes
+        new_inp.write("*BOUNDARY\n")
+        new_inp.write(f"{self.fixed_node_set_name},1,6,0\n")
+
+        #Output files and values
+        new_inp.write(f"*NODE PRINT, NSET={self.disp_node_set_name}")
+        if self.output_type=="Disp":
+            new_inp.write("\nU\n")
+        elif self.output_type=="Force":
+            new_inp.write(",Totals=Yes\nRF\n")
+
+        new_inp.write("*END STEP\n")
+
+        #Mass and stiffness storage
+        new_inp.write("*STEP\n")
+        new_inp.write("*FREQUENCY, SOLVER=MATRIXSTORAGE\n")
+        new_inp.write("*END STEP")
+        new_inp.close()
+
+    def run_inp_file(self,step_dir,new_step_name):
+        os.chdir(step_dir)
+        output=subprocess.run(
+            [self.ccx_exe_path,"-i",new_step_name],
+            capture_output=True,
+            check=True,
+            encoding='utf-8'
+        ).stdout
+        os.chdir(self.work_dir)
+        if "Job finished" not in output:
+            self.error=True
+        return output
 
     def get_disp(dat_filename, node_set_name):
         file=open(dat_filename,'r')
@@ -474,7 +487,7 @@ if __name__ == "__main__":
     fea.max_increment_value= 1E-1 # max increment value[s]
     t = np.linspace(0.0, 200, 1) # Time axis.
     u =random.sample(range(-20,20), 20) #displacement array[mm]
-    print(u)
+    print(f"{u}\n")
 
     fea.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
     fea.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
@@ -487,12 +500,13 @@ if __name__ == "__main__":
     fea.fixed_node_set_name="ConstraintFixed"
     fea.analysis_type="Static"
     fea.first_degree_freedom=fea.last_degree_freedom=1 #constraints on the x axis
-    fea.total_steps=0
+    fea.nb_steps_prior=0
+    fea.total_steps=10
 
     # output
     #RN = np.zeros(step)
 
-    for no_step_prior in range(4):
+    for no_step_prior in range(fea.total_steps):
         fea.disp_value = u[no_step_prior]
         fea.fmi2DoStep(1,1, no_step_prior)
     # plt.plot(t, RN)
