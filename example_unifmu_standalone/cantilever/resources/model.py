@@ -10,6 +10,7 @@ import tempfile
 
 class Model:
     def __init__(self) -> None:
+        #Parameters for CCX
         self.first_increment_value = 1e-5
         self.step_duration = 1
         self.min_increment_value = 1e-3
@@ -25,11 +26,17 @@ class Model:
         self.work_dir =r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
         self.analysis_type ="Static"
         self.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"
+
+        #Output files
         self.dat_filename=""
         self.mass_matrix=""
         self.stiff_matrix=""
         self.error=False
         self.total_steps=20
+        self.RPio =#need info from Giuseppe
+        self.Dfbkio =#need info from Giuseppe
+        self.Ffbkio =#need info from Giuseppe
+        self.Tfbkio =#need info from Giuseppe
 
 
         self.reference_to_attribute = {
@@ -96,7 +103,6 @@ class Model:
 
                 if "Job finished" in out:
                     #self._update_outputs()#need to modify this with the actual outputs
-                    #no_step_prior+=1
                     self.nb_steps_prior+=1
                     if self.nb_steps_prior< self.total_steps:
                         print(f"\nStep {self.nb_steps_prior} done\nMoving on to Step {self.nb_steps_prior+1}...\n")
@@ -253,10 +259,10 @@ class Model:
             #Mass matrix
             #Stiffness matrix
 
-        self.mass_matrix_filename =""
-        self.stiff_matrix_filename =""
-        self.dat_filename =""
-        self.rout_filename =""
+        self.RPio =#need info from Giuseppe
+        self.Dfbkio =#need info from Giuseppe
+        self.Ffbkio =#need info from Giuseppe
+        self.Tfbkio =#need info from Giuseppe
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
         #self.work_dir=tempfile.mkdtemp()

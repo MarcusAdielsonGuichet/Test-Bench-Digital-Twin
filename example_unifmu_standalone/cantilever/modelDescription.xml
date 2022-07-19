@@ -61,7 +61,7 @@
     </ScalarVariable>
 
     <!--Index of variable = "11"-->
-    <ScalarVariable name="total_steps" valueReference="10" variability="discrete" causality="input">
+    <ScalarVariable name="nb_steps_prior" valueReference="10" variability="discrete" causality="input">
       <Integer start="0" />
     </ScalarVariable>
 
@@ -104,6 +104,12 @@
     <ScalarVariable name="error" valueReference="18" variability="discrete" causality="input">
       <Boolean start="false" />
     </ScalarVariable>
+
+    <!--Index of variable = "20"-->
+    <ScalarVariable name="total_steps" valueReference="19" variability="discrete" causality="input">
+      <Integer start="20" />
+    </ScalarVariable>
+
 
   </ModelVariables>
   <ModelStructure>
