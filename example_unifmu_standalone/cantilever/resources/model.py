@@ -10,6 +10,7 @@ import tempfile
 
 class Model:
     def __init__(self) -> None:
+
         #Parameters for CCX
         self.first_increment_value = 1e-5
         self.step_duration = 1
@@ -22,21 +23,23 @@ class Model:
         self.first_degree_freedom =1
         self.last_degree_freedom =1
         self.nb_steps_prior =0
+        self.analysis_type ="Static"
+        self.total_steps=20
+        self.error=False
+
+        #Directories
         self.ccx_exe_path =r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
         self.work_dir =r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
-        self.analysis_type ="Static"
         self.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"
 
-        #Output files
+        #Outputs
         self.dat_filename=""
         self.mass_matrix=""
         self.stiff_matrix=""
-        self.error=False
-        self.total_steps=20
-        self.RPio =#need info from Giuseppe
-        self.Dfbkio =#need info from Giuseppe
-        self.Ffbkio =#need info from Giuseppe
-        self.Tfbkio =#need info from Giuseppe
+        self.RPio =0.0#need info from Giuseppe; according to the paper, R is the restoring force
+        self.Dfbkio =0.0#need info from Giuseppe; according to the paper D = M +C*γ*∆t +K*β*∆t² with M mass matrix, C damping matrix, K stiffness matrix, γ and β are the parameters of the Newmark scheme for the PS (Bathe 1982)?
+        self.Ffbkio =0.0#need info from Giuseppe; according to the paper f=M*∆t*a(t)?
+        self.Tfbkio =0.0#need info from Giuseppe; Time?
 
 
         self.reference_to_attribute = {
@@ -60,9 +63,13 @@ class Model:
             17: "stiff_matrix",
             18: "error",
             19: "total_steps"
+            20: "RPio"
+            21: "Dfbkio"
+            22: "Ffbkio"
+            23: "Tfbkio"
         }
 
-        self._update_outputs()
+        #self._update_outputs()
 
     def fmi2DoStep(self, current_time, step_size, no_step_prior):
         #Use cases:
@@ -112,7 +119,8 @@ class Model:
                 else:
                     self.error=True
                     #Can I do this? Or better to write error function?
-                    return Fmi2Status.error, out
+                    prin(out)
+                    return Fmi2Status.error
             else:
                 print("Simulation done")
                 return Fmi2Status.ok
@@ -159,6 +167,8 @@ class Model:
         return Fmi2Status.ok
 
     def fmi2Terminate(self):
+        if self.nb_steps_prior==self.total_steps-1:
+            #Terminate simulation?
         return Fmi2Status.ok
 
     def fmi2ExtSerialize(self):

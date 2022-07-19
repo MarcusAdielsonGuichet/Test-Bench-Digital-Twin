@@ -110,6 +110,25 @@
       <Integer start="20" />
     </ScalarVariable>
 
+    <!--Index of variable = "21"-->
+    <ScalarVariable name="RPio" valueReference="20" variability="discrete" causality="output">
+      <Real start="0.0"/>
+    </ScalarVariable>
+
+    <!--Index of variable = "22"-->
+    <ScalarVariable name="Dfbkio" valueReference="21" variability="discrete" causality="output">
+      <Real start="0.0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "23"-->
+    <ScalarVariable name="Ffbkio" valueReference="22" variability="discrete" causality="output">
+      <Real start="0.0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "24"-->
+    <ScalarVariable name="Tfbkio" valueReference="23" variability="discrete" causality="output">
+      <Real start="0.0" />
+    </ScalarVariable>
 
   </ModelVariables>
   <ModelStructure>
