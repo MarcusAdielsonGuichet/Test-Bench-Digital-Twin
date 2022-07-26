@@ -1,3 +1,4 @@
+import fmpy
 from fmpy import read_model_description
 from fmpy.fmi2 import FMU2Slave
 import numpy as np
@@ -5,16 +6,16 @@ import os
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__": # <--- ensures that test-code is not run if module is imported
-    
+
   fmu_filename = 'fmu_example'
 
   dt = 1.0 # time step [s]
   step = 100 # Simulation steps.
   tmax = (step-1) * dt # Simulation length.
   t = np.linspace(0.0, tmax, step) # Time axis.
-  
+
   # Inputs
-  f = np.sin(2*np.pi*t/tmax)       
+  f = np.sin(2*np.pi*t/tmax)
   u = np.linspace(0.0, 20.0, step)
 
   # read the model description
@@ -26,11 +27,11 @@ if __name__ == "__main__": # <--- ensures that test-code is not run if module is
     vrs[variable.name] = variable.valueReference
 
   # get the value references for the variables we want to get/set
-  vr_Uio = vrs['Uio']  
-  vr_Tio = vrs['Tio']  
+  vr_Uio = vrs['Uio']
+  vr_Tio = vrs['Tio']
   vr_Fio = vrs['Fio']
   vr_RNio = vrs['RNio']
-  
+
   # output
   RN = np.zeros(step)
 
@@ -38,7 +39,7 @@ if __name__ == "__main__": # <--- ensures that test-code is not run if module is
                     unzipDirectory=os.path.abspath(fmu_filename),
                     modelIdentifier=model_description.coSimulation.modelIdentifier,
                     instanceName='instance1')
-  
+
   # initialize
   fmu.instantiate()
   fmu.setupExperiment(startTime=t[0])
@@ -65,7 +66,7 @@ if __name__ == "__main__": # <--- ensures that test-code is not run if module is
     # advance the time
     i += 1
 
-  
+
   fmu.terminate()
   fmu.freeInstance()
 
