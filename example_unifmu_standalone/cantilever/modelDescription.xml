@@ -36,8 +36,8 @@
     </ScalarVariable>
 
     <!--Index of variable = "6"-->
-    <ScalarVariable name="disp_value" valueReference="5" variability="discrete" causality="input">
-      <Real start="20" />
+    <ScalarVariable name="U1i" valueReference="5" variability="discrete" causality="input">
+      <Real start="0.0" />
     </ScalarVariable>
 
     <!--Index of variable = "7"-->
@@ -51,13 +51,13 @@
     </ScalarVariable>
 
     <!--Index of variable = "9"-->
-    <ScalarVariable name="first_degree_freedom" valueReference="8" variability="discrete" causality="input">
-      <Integer start="1" />
+    <ScalarVariable name="U2o" valueReference="8" variability="discrete" causality="input">
+      <Real start="0.0" />
     </ScalarVariable>
 
     <!--Index of variable = "10"-->
-    <ScalarVariable name="last_degree_freedom" valueReference="9" variability="discrete" causality="input">
-      <Integer start="1" />
+    <ScalarVariable name="L" valueReference="9" variability="discrete" causality="input">
+      <Integer start="60" />
     </ScalarVariable>
 
     <!--Index of variable = "11"-->
@@ -111,23 +111,28 @@
     </ScalarVariable>
 
     <!--Index of variable = "21"-->
-    <ScalarVariable name="RPio" valueReference="20" variability="discrete" causality="output">
-      <Real start="0.0"/>
+    <ScalarVariable name="F1o" valueReference="20" variability="discrete" causality="output">
+      <Real />
     </ScalarVariable>
 
     <!--Index of variable = "22"-->
-    <ScalarVariable name="Dfbkio" valueReference="21" variability="discrete" causality="output">
-      <Real start="0.0" />
+    <ScalarVariable name="F2o" valueReference="21" variability="discrete" causality="output">
+      <Real />
     </ScalarVariable>
 
     <!--Index of variable = "23"-->
-    <ScalarVariable name="Ffbkio" valueReference="22" variability="discrete" causality="output">
-      <Real start="0.0" />
+    <ScalarVariable name="F4o" valueReference="22" variability="discrete" causality="output">
+      <Real/>
     </ScalarVariable>
 
     <!--Index of variable = "24"-->
-    <ScalarVariable name="Tfbkio" valueReference="23" variability="discrete" causality="output">
-      <Real start="0.0" />
+    <ScalarVariable name="F5o" valueReference="23" variability="discrete" causality="output">
+      <Real />
+    </ScalarVariable>
+
+    <!--Index of variable = "25"-->
+    <ScalarVariable name="F6o" valueReference="24" variability="discrete" causality="output">
+      <Real />
     </ScalarVariable>
 
   </ModelVariables>
