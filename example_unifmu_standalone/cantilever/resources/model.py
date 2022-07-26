@@ -16,11 +16,12 @@ class Model:
         self.step_duration = 1
         self.min_increment_value = 1e-3
         self.max_increment_value = 1e-1
-        self.output_type = "Disp"
-        self.disp_value =20
+        self.output_type = "Force"
+        self.U1i =10 #Initial horizontal displacement [mm]
+        self.U2i =-10# Initial vertical displacement [mm]
         self.disp_node_set_name ="ConstraintDisplacement"
         self.fixed_node_set_name ="ConstraintFixed"
-        self.first_degree_freedom =1
+        self.L =500 #Lenght of cantilever beam [mm]
         self.last_degree_freedom =1
         self.nb_steps_prior =0
         self.analysis_type ="Static"
@@ -36,10 +37,15 @@ class Model:
         self.dat_filename=""
         self.mass_matrix=""
         self.stiff_matrix=""
-        self.RPio =0.0#need info from Giuseppe; according to the paper, R is the restoring force
-        self.Dfbkio =0.0#need info from Giuseppe; according to the paper D = M +C*γ*∆t +K*β*∆t² with M mass matrix, C damping matrix, K stiffness matrix, γ and β are the parameters of the Newmark scheme for the PS (Bathe 1982)?
-        self.Ffbkio =0.0#need info from Giuseppe; according to the paper f=M*∆t*a(t)?
-        self.Tfbkio =0.0#need info from Giuseppe; Time?
+        # self.RPio =0.0#need info from Giuseppe; according to the paper, R is the restoring force
+        # self.Dfbkio =0.0#need info from Giuseppe; according to the paper D = M +C*γ*∆t +K*β*∆t² with M mass matrix, C damping matrix, K stiffness matrix, γ and β are the parameters of the Newmark scheme for the PS (Bathe 1982)?
+        # self.Ffbkio =0.0#need info from Giuseppe; according to the paper f=M*∆t*a(t)?
+        # self.Tfbkio =0.0#need info from Giuseppe; Time
+        self.F1o=0.0 #
+        self.F2o=0.0
+        self.F4o=0.0
+        self.F5o=0.0
+        self.F6o=0.0
 
 
         self.reference_to_attribute = {
@@ -48,10 +54,10 @@ class Model:
             2: "min_increment_value",
             3: "max_increment_value",
             4: "output_type",
-            5: "disp_value",
+            5: "U1i",
             6: "disp_node_set_name",
             7: "fixed_node_set_name",
-            8: "first_degree_freedom",
+            8: "U2i",
             9: "last_degree_freedom",
             10: "nb_steps_prior",
             11: "ccx_exe_path",
@@ -62,11 +68,17 @@ class Model:
             16: "mass_matrix",
             17: "stiff_matrix",
             18: "error",
-            19: "total_steps"
-            20: "RPio"
-            21: "Dfbkio"
-            22: "Ffbkio"
-            23: "Tfbkio"
+            19: "total_steps",
+            20: "F1o",
+            21: "F2o",
+            22: "F4o",
+            23: "F5o",
+            24: "F6o"
+
+            # 20: "RPio"
+            # 21: "Dfbkio"
+            # 22: "Ffbkio"
+            # 23: "Tfbkio"
         }
 
         #self._update_outputs()
@@ -80,7 +92,6 @@ class Model:
         #self.work_dir=tempfile.mkdtemp()
         if self.error==False:
             if self.nb_steps_prior<= self.total_steps-1:
-
                 if self.nb_steps_prior==0:#Checking for the first step
                     #Finding the inp file
                     step_dir=self.rout_dir
@@ -106,6 +117,8 @@ class Model:
 
 
                 out=self.run_inp_file(step_dir,new_step_name)
+                self.update_outputs(step_dir,new_step_name)
+                self.update_inputs()
 
 
                 if "Job finished" in out:
@@ -167,8 +180,8 @@ class Model:
         return Fmi2Status.ok
 
     def fmi2Terminate(self):
-        if self.nb_steps_prior==self.total_steps-1:
-            #Terminate simulation?
+        # if self.nb_steps_prior==self.total_steps-1:
+        #     #Terminate simulation?
         return Fmi2Status.ok
 
     def fmi2ExtSerialize(self):
@@ -180,10 +193,10 @@ class Model:
             self.min_increment_value,
             self.max_increment_value,
             self.output_type,
-            self.disp_value,
+            self.U1i,
+            self.U2i,
             self.disp_node_set_name,
             self.fixed_node_set_name,
-            self.last_degree_freedom,
             self.nb_steps_prior,
             self.ccx_exe_path,
             self.work_dir,
@@ -192,7 +205,12 @@ class Model:
             self.mass_matrix,
             self.stiff_matrix,
             self.analysis_type,
-            self.error
+            self.error,
+            self.F1o,
+            self.F2o,
+            self.F4o,
+            self.F5o,
+            self.F6o
             )
         )
         return Fmi2Status.ok, bytes
@@ -204,7 +222,8 @@ class Model:
             min_increment_value,
             max_increment_value,
             output_type,
-            disp_value,
+            U1i,
+            U2i,
             disp_node_set_name,
             fixed_node_set_name,
             last_degree_freedom,
@@ -216,7 +235,12 @@ class Model:
             mass_matrix,
             stiff_matrix,
             error,
-            analysis_type
+            analysis_type,
+            F1o,
+            F2o,
+            F4o,
+            F5o,
+            F6o
 
 
         ) = pickle.loads(bytes)
@@ -226,11 +250,10 @@ class Model:
         self.min_increment_value =min_increment_value
         self.max_increment_value =max_increment_value
         self.output_type =output_type
-        self.disp_value =disp_value
+        self.U1i =U1i
+        self.U2i =U2i
         self.disp_node_set_name =disp_node_set_name
         self.fixed_node_set_name =fixed_node_set_name
-        self.first_degree_freedom =first_degree_freedom
-        self.last_degree_freedom =last_degree_freedom
         self.nb_steps_prior =nb_steps_prior
         self.ccx_exe_path =ccx_exe_path
         self.work_dir =work_dir
@@ -240,8 +263,13 @@ class Model:
         self.mass_matrix=mass_matrix
         self.stiff_matrix=stiff_matrix
         self.error=error
+        self.F1o=F1o
+        self.F2o=F2o
+        self.F4o=F4o
+        self.F5o=F5o
+        self.F6o=F6o
 
-        self._update_outputs()
+        #self._update_outputs()
 
         return Fmi2Status.ok
 
@@ -268,11 +296,33 @@ class Model:
             #Displacement vectors
             #Mass matrix
             #Stiffness matrix
+        #
+        # self.RPio =#need info from Giuseppe
+        # self.Dfbkio =#need info from Giuseppe
+        # self.Ffbkio =#need info from Giuseppe
+        # self.Tfbkio =#need info from Giuseppe
+        # self.dat_filename=os.path.join(step_dir, new_step_name+".dat")
+        # print(self.dat_filename)
+        # self.F1o=self.get_force_sum(self.dat_filename, self.disp_node_set_name)[0]
+        # self.F2o=self.get_force_sum(self.dat_filename, self.disp_node_set_name)[1]
+        # self.F4o=-self.F2o
+        # self.F5o=-self.F1o
+        # self.F6o=self.F2o*self.L
+        # print()
+        return Fmi2Status.ok
 
-        self.RPio =#need info from Giuseppe
-        self.Dfbkio =#need info from Giuseppe
-        self.Ffbkio =#need info from Giuseppe
-        self.Tfbkio =#need info from Giuseppe
+    def update_outputs(self,step_dir,new_step_name):
+        self.dat_filename=os.path.join(step_dir, new_step_name+".dat")
+        self.F1o=self.get_force_sum(self.dat_filename, self.disp_node_set_name)[0]
+        self.F2o=self.get_force_sum(self.dat_filename, self.disp_node_set_name)[2]
+        self.F4o=-self.F2o
+        self.F5o=-self.F1o
+        self.F6o=self.F2o*self.L
+
+    def update_inputs(self):
+        self.U1i=self.F1o*self.L/(200000*50*10)#U1i[mm]=L[mm]*F1o[N]/(E[MPa]*Area[mm²]) with Area=width*height
+        self.U2i=self.F2o*self.L**3/(3*200000*50*10**3/12)#U2i[mm]=L^3[mm^3]*F2o[N]/(3*E[MPa]*I[mm^4]) with I=(width*height^3)/12
+
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
         #self.work_dir=tempfile.mkdtemp()
@@ -339,14 +389,19 @@ class Model:
         new_inp.write("*RESTART, WRITE\n")
 
         #Displaced nodes characteristics, add force loads?
-        new_inp.write("*BOUNDARY\n")
-        new_inp.write(f"{self.disp_node_set_name},{self.first_degree_freedom},{self.last_degree_freedom},{self.disp_value}\n")
+        if self.U1i!=0:
+            new_inp.write("*BOUNDARY\n")
+            new_inp.write(f"{self.disp_node_set_name},1,1,{self.U1i}\n")
+        if self.U2i!=0:
+            new_inp.write("*BOUNDARY\n")
+            new_inp.write(f"{self.disp_node_set_name},3,3,{self.U2i}\n")
 
         #Fixed nodes
         new_inp.write("*BOUNDARY\n")
-        new_inp.write(f"{self.fixed_node_set_name},1,6,0\n")
+        new_inp.write(f"{self.fixed_node_set_name},1,3,0\n")
 
         #Output files and values
+        new_inp.write("*NODE FILE\nU\n")
         new_inp.write(f"*NODE PRINT, NSET={self.disp_node_set_name}")
         if self.output_type=="Disp":
             new_inp.write("\nU\n")
@@ -355,16 +410,17 @@ class Model:
 
         new_inp.write("*END STEP\n")
 
-        #Mass and stiffness storage
-        new_inp.write("*STEP\n")
-        new_inp.write("*FREQUENCY, SOLVER=MATRIXSTORAGE\n")
-        new_inp.write("*END STEP")
-        new_inp.close()
+        # #Mass and stiffness storage
+        # new_inp.write("*STEP\n")
+        # new_inp.write("*FREQUENCY, SOLVER=MATRIXSTORAGE\n")
+        # new_inp.write("*END STEP")
+        # new_inp.close()
 
     def run_inp_file(self,step_dir,new_step_name):
         os.chdir(step_dir)
+        #Taking out the "-i", command due to an error
         output=subprocess.run(
-            [self.ccx_exe_path,"-i",new_step_name],
+            [self.ccx_exe_path,new_step_name],
             capture_output=True,
             check=True,
             encoding='utf-8'
@@ -374,7 +430,7 @@ class Model:
             self.error=True
         return output
 
-    def get_disp(dat_filename, node_set_name):
+    def get_disp(self, dat_filename, node_set_name):
         file=open(dat_filename,'r')
         result_disp=[]
         disp_section=False
@@ -390,7 +446,7 @@ class Model:
         file.close()#is this necessary?
         return result_disp
 
-    def get_node_forces(dat_filename,node_set_name):
+    def get_node_forces(self, dat_filename,node_set_name):
         file=open(dat_filename,'r')
         result_forces=[]
         node_force_section=False
@@ -406,62 +462,62 @@ class Model:
         file.close()#is this necessary?
         return result_forces
 
-    def isfloat(num):
+    def isfloat(self, num):
         try:
             float(num)
             return True
         except ValueError:
             return False
 
-    def get_force_sum(dat_filename,node_set_name):
+    def get_force_sum(self, dat_filename,node_set_name):
         file=open(dat_filename,'r')
         forces_section=False
-        result_force_sum=[]
+        #result_force_sum=[]
         for line in file:
             if len(line.split())>1:
-                if "total force" in line and node_set_name in line:
+                if "total force" in line and node_set_name.upper() in line:
                     forces_section=True
-                if isfloat(line.split()[0])==False and "total force" not in line:#works but not as wanted
+                if self.isfloat(line.split()[0])==False and "total force" not in line:#works but not as wanted
                     forces_section=False
-                if forces_section==True and isfloat(line.split()[0]):#Verfication for non-blank lines and disp section
+                if forces_section==True and self.isfloat(line.split()[0]):#Verfication for non-blank lines and disp section
                     fx,fy,fz=float(line.split()[0]),float(line.split()[1]),float(line.split()[2])
-                    result_force_sum.append([fx,fy,fz])
+                    #result_force_sum.append([fx,fy,fz])
         file.close()#is this necessary?
-        return result_force_sum
+        return fx,fy,fz
 
-    def get_mass_matrix(mas_filename):
-        file=open(mas_filename,'r')
-        result_mat=[]
-        for line in file:
-            if len(line.split())>1:#filters out the last blank line
-                mat_line, mat_column,value=int(line.split()[0]),int(line.split()[1]),float(line.split()[2])
-                result_mat.append([mat_line,mat_column,value])
-
-        #Storing the values into a np array? Given that only non-zero values are given by the .mas file, is it important to have the complete matrix?
-        n,p= result_mat[len(result_mat)-1][0],result_mat[len(result_mat)-1][1]
-        mass_mat=np.zeros((n,p))
-        for element in result_mat:
-            mass_mat[element[0]-1,element[1]-1]=element[2]
-
-        file.close()#is this necessary?
-        return mass_mat
-
-    def get_stiffness_matrix(sti_filename):
-        file=open(sti_filename,'r')
-        result_mat=[]
-        for line in file:
-            if len(line.split())>1:
-                mat_line, mat_column,value=int(line.split()[0]),int(line.split()[1]),float(line.split()[2])
-                result_mat.append([mat_line,mat_column,value])
-
-        #Storing the values into a np array? Given that only non-zero values are given by the .sti file, is it important to have the complete matrix? Besides 4 digits are lost in conversion apparently
-        n,p= result_mat[len(result_mat)-1][0],result_mat[len(result_mat)-1][1]
-        stif_mat=np.zeros((n,p))
-        for element in result_mat:
-            stif_mat[element[0]-1,element[1]-1]=element[2]
-
-        file.close()#is this necessary?
-        return stif_mat
+    # def get_mass_matrix(mas_filename):
+    #     file=open(mas_filename,'r')
+    #     result_mat=[]
+    #     for line in file:
+    #         if len(line.split())>1:#filters out the last blank line
+    #             mat_line, mat_column,value=int(line.split()[0]),int(line.split()[1]),float(line.split()[2])
+    #             result_mat.append([mat_line,mat_column,value])
+    #
+    #     #Storing the values into a np array? Given that only non-zero values are given by the .mas file, is it important to have the complete matrix?
+    #     n,p= result_mat[len(result_mat)-1][0],result_mat[len(result_mat)-1][1]
+    #     mass_mat=np.zeros((n,p))
+    #     for element in result_mat:
+    #         mass_mat[element[0]-1,element[1]-1]=element[2]
+    #
+    #     file.close()#is this necessary?
+    #     return mass_mat
+    #
+    # def get_stiffness_matrix(sti_filename):
+    #     file=open(sti_filename,'r')
+    #     result_mat=[]
+    #     for line in file:
+    #         if len(line.split())>1:
+    #             mat_line, mat_column,value=int(line.split()[0]),int(line.split()[1]),float(line.split()[2])
+    #             result_mat.append([mat_line,mat_column,value])
+    #
+    #     #Storing the values into a np array? Given that only non-zero values are given by the .sti file, is it important to have the complete matrix? Besides 4 digits are lost in conversion apparently
+    #     n,p= result_mat[len(result_mat)-1][0],result_mat[len(result_mat)-1][1]
+    #     stif_mat=np.zeros((n,p))
+    #     for element in result_mat:
+    #         stif_mat[element[0]-1,element[1]-1]=element[2]
+    #
+    #     file.close()#is this necessary?
+    #     return stif_mat
 
 
 
@@ -503,7 +559,7 @@ if __name__ == "__main__":
     fea.max_increment_value= 1E-1 # max increment value[s]
     t = np.linspace(0.0, 200, 1) # Time axis.
     u =random.sample(range(-20,20), 20) #displacement array[mm]
-    print(f"{u}\n")
+    #print(f"{u}\n")
 
     fea.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
     fea.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
@@ -511,20 +567,22 @@ if __name__ == "__main__":
 
 
 
-    fea.output_type="Disp"
+    fea.output_type="Force"
     fea.disp_node_set_name="ConstraintDisplacement"
     fea.fixed_node_set_name="ConstraintFixed"
     fea.analysis_type="Static"
-    fea.first_degree_freedom=fea.last_degree_freedom=1 #constraints on the x axis
     fea.nb_steps_prior=0
-    fea.total_steps=10
+    fea.total_steps=500
 
     # output
     #RN = np.zeros(step)
 
     for no_step_prior in range(fea.total_steps):
-        fea.disp_value = u[no_step_prior]
+        print(f"U1i={fea.U1i}\n")
+        print(f"U2i={fea.U2i}\n")
+        #fea.U1i = u[no_step_prior]
         fea.fmi2DoStep(1,1, no_step_prior)
+        print(f"F1o={fea.F1o}\n")
     # plt.plot(t, RN)
     # plt.ylabel("RN")
     # plt.xlabel("t")
