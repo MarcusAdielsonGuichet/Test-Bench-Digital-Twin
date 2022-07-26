@@ -47,25 +47,9 @@ def run_simulation(ccx_exe_path,work_dir,rout_dir):
   else:
     error=False
     step_dir=rout_dir
-    # disp_node_set_name,
-    # first_degree_freedom,
-    # last_degree_freedom=get_disp_characteristics(inp_file_path)#need to read the inp file and extract the corresponding values and names
     
     for i in range(2,total_step+1):
       if error==False:
-        # #send the outputs to the other FMU
-        # mass_matrix,
-        # stiff_matrix,
-        # disp_values=read_and_send_outputs(step_dir)#need to read the .mas, .sti, .dat files and send corresponding outputs types to the other FMU, need more info on orchestrator for that
-        
-        # #update the FMU inputs
-        # first_increment_value,
-        # step_duration,
-        # min_increment_value,
-        # max_increment_value,
-        # output_type,
-        # new_disp_value=update_inputs(other_fmu)#User defined? Orchestrator defined?
-        
         new_step_folder_name=f"Step_{i}"
         new_step_name=f"init_Step_{i}"
         
@@ -222,6 +206,22 @@ def run_inp_file(ccx_exe_path,step_dir,new_step_name):
   return output
 
 
+        # #send the outputs to the other FMU
+        # mass_matrix,
+        # stiff_matrix,
+        # disp_values=read_and_send_outputs(step_dir)#need to read the .mas, .sti, .dat files and send corresponding outputs types to the other FMU, need more info on orchestrator for that
+        
+        # #update the FMU inputs
+        # first_increment_value,
+        # step_duration,
+        # min_increment_value,
+        # max_increment_value,
+        # output_type,
+        # new_disp_value=update_inputs(other_fmu)#User defined? Orchestrator defined?
+
+    # disp_node_set_name,
+    # first_degree_freedom,
+    # last_degree_freedom=get_disp_characteristics(inp_file_path)#need to read the inp file and extract the corresponding values and names
 # 
 # 
 # try:
