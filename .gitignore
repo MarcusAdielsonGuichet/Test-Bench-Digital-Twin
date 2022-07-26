@@ -1,3 +1,4 @@
 *.pyc
 **/venv/
 **/_fmu_env_/
+CCX_Files/
