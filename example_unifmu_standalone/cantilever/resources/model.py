@@ -11,77 +11,108 @@ import tempfile
 class Model:
     def __init__(self) -> None:
 
-        #Parameters for CCX
-        self.first_increment_value = 1e-5
-        self.step_duration = 1
-        self.min_increment_value = 1e-3
-        self.max_increment_value = 1e-1
-        self.output_type = "Force"
-        self.U1i =10 #Initial horizontal displacement [mm]
-        self.U2i =-10# Initial vertical displacement [mm]
-        self.disp_node_set_name ="ConstraintDisplacement"
-        self.fixed_node_set_name ="ConstraintFixed"
-        self.L =500 #Lenght of cantilever beam [mm]
-        self.last_degree_freedom =1
-        self.nb_steps_prior =0
-        self.analysis_type ="Static"
-        self.total_steps=20
-        self.error=False
-
         #Directories
-        self.ccx_exe_path =r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
-        self.work_dir =r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
+        self.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
+        self.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
         self.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"
 
+        #Status checks
+        self.nb_steps_prior=0
+        self.total_steps=20
+        self.error=False #Need to replace with the Fmistatus class?
+
+        #Internal inputs
+            #Parameters for CCX
+                #Time parameters [s]
+            self.first_increment_value = 1e-5
+            self.step_duration = 1
+            self.min_increment_value = 1e-3
+            self.max_increment_value = 1e-1
+
+            self.disp_node_set_name ="ConstraintDisplacement"
+            elf.fixed_node_set_name ="ConstraintFixed"
+            self.analysis_type ="Static"
+            self.output_type = "Force"
+
+
+            #Geometrical caracteristics
+            self.L =500 #Length of cantilever beam [mm]
+
+            #First actuator pivot point coordinates, directing mostly horizontal displacement[mm]
+            self.x1=0
+            self.y1=50
+
+            #Second actuator pivot point coordinates, directing mostly vertical displacement [mm]
+            self.x2=50
+            self.y2=0
+
+            #Actuators resting lengths for respective pivot points  [mm]
+            self.l1=50
+            self.l2=50
+
+            #Beam displacement origin point, aka crosspoint between the two actuators at rest?
+            self.yc=0
+            self.yc=0
+
+
+        #External inputs
+        self.delta_l1=0 #First actuator length change [mm]
+        self.delta_l2=0 #Second actuator length change [mm]
+
+        self.ux =0 #Initial horizontal beam displacement [mm]
+        self.uy =0 #Initial vertical beam displacement [mm]
+
         #Outputs
-        self.dat_filename=""
-        self.mass_matrix=""
-        self.stiff_matrix=""
-        # self.RPio =0.0#need info from Giuseppe; according to the paper, R is the restoring force
-        # self.Dfbkio =0.0#need info from Giuseppe; according to the paper D = M +C*γ*∆t +K*β*∆t² with M mass matrix, C damping matrix, K stiffness matrix, γ and β are the parameters of the Newmark scheme for the PS (Bathe 1982)?
-        # self.Ffbkio =0.0#need info from Giuseppe; according to the paper f=M*∆t*a(t)?
-        # self.Tfbkio =0.0#need info from Giuseppe; Time
-        self.F1o=0.0 #
-        self.F2o=0.0
-        self.F4o=0.0
-        self.F5o=0.0
-        self.F6o=0.0
+        self.Fxbo=0.0 #Resulting horizontal force actuator-->beam?
+        self.Fybo=0.0 #Resulting vertical force actuator-->beam?
+        self.Fxfo=0.0 #Resulting horizontal force beam-->frame?
+        self.Fyfo=0.0 #Resulting vertical force beam-->frame?
+        self.Mzfo=0.0 #Resulting z axistorque beam-->frame?
+
+        self.dat="" #Displacement and force output file
+        self.mass_mat="" #Mass matrix output file
+        self.stiff_mat="" #Stiffness matrix output file
 
 
         self.reference_to_attribute = {
-            0: "first_increment_value",
-            1: "step_duration",
-            2: "min_increment_value",
-            3: "max_increment_value",
-            4: "output_type",
-            5: "U1i",
-            6: "disp_node_set_name",
-            7: "fixed_node_set_name",
-            8: "U2i",
-            9: "last_degree_freedom",
-            10: "nb_steps_prior",
-            11: "ccx_exe_path",
-            12: "work_dir",
-            13: "analysis_type",
-            14: "rout_dir",
-            15: "dat_filename",
-            16: "mass_matrix",
-            17: "stiff_matrix",
-            18: "error",
-            19: "total_steps",
-            20: "F1o",
-            21: "F2o",
-            22: "F4o",
-            23: "F5o",
-            24: "F6o"
-
-            # 20: "RPio"
-            # 21: "Dfbkio"
-            # 22: "Ffbkio"
-            # 23: "Tfbkio"
+            0: "ccx_exe_path",
+            1: "work_dir",
+            2: "rout_dir",
+            3: "nb_steps_prior",
+            4: "total_steps",
+            5: "error",
+            6: "first_increment_value",
+            7: "step_duration",
+            8: "min_increment_value",
+            9: "max_increment_value"
+            10: "disp_node_set_name",
+            11: "fixed_node_set_name",
+            12: "analysis_type",
+            13: "output_type",
+            14: "L",
+            15: "x1",
+            16: "y1",
+            17: "x2",
+            18: "y2",
+            19: "l1",
+            20: "l2",
+            21: "xc",
+            22: "yc",
+            23: "delta_l1",
+            24: "delta_l2",
+            25: "ux",
+            26: "uy",
+            27: "Fxbo",
+            28: "Fybo",
+            29: "Fxfo",
+            30: "Fyfo",
+            31: "Mzfo",
+            32: "dat",
+            33: "mass_mat",
+            34: "stiff_mat"
         }
 
-        #self._update_outputs()
+        self._update_outputs()
 
     def fmi2DoStep(self, current_time, step_size, no_step_prior):
         #Use cases:
@@ -89,7 +120,8 @@ class Model:
             #First step with error(wrong inp name usually)
             #Nth step without error
             #Nth step with error, due to existing dir from previous run, wrong inp, step characteristics not compatible with exp,
-        #self.work_dir=tempfile.mkdtemp()
+
+
         if self.error==False:
             if self.nb_steps_prior<= self.total_steps-1:
                 if self.nb_steps_prior==0:#Checking for the first step
@@ -269,7 +301,7 @@ class Model:
         self.F5o=F5o
         self.F6o=F6o
 
-        #self._update_outputs()
+        self._update_outputs()
 
         return Fmi2Status.ok
 
