@@ -166,6 +166,20 @@ def new_step_inpfile_writer(step_dir,first_increment_value,step_duration,min_inc
   new_inp.write("*END STEP")
   new_inp.close()
 
+def step_inpfile_writer(filename):#needs a previous run, rename the last_step.rout into new_inp_file.rin
+    line_number=0
+    with open(filename, 'r+') as new_inp:
+        lines=new_inp.readlines()
+        new_inp.seek(0)
+        new_inp.truncate()
+        for line_nb,line in enumerate(lines):
+            if "*SOLID SECTION"  in line:
+                line_number=line_nb
+                print(line_number)
+                break
+        stop=line_number+1
+        print(lines[:stop])
+        new_inp.writelines(lines[:stop])
 #verified and functional
 def runtest(ccx_exe_path,work_dir,rout_dir):
   os.chdir(rout_dir)

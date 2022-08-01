@@ -20,6 +20,8 @@ yc=0
 ux=0
 uy=0
 
+filename=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_truncate.txt"
+
 def init_equations(tuple):
     xc,yc=tuple
     return [(xc-x1)**2+(yc-y1)**2-l1**2,(xc-x2)**2+(yc-y2)**2-l2**2]
@@ -40,7 +42,8 @@ def actuators(x1,x2,y1,y2,l1,l2,delta_l1,delta_l2):
         ux, uy= fsolve(step_equations, (delta_l1,delta_l2))
         print(f"ux={ux}\nuy={uy}\nxc={xc}\nyc={yc}")
 
-#
+
+
 # def inv_jacobian(matrix):
 #     inv_jac=np.empty_like(matrix)
 #     coef=1/(2*(2*x1*x2+(x1-x2)*(xc-yc+ux-uy)))
