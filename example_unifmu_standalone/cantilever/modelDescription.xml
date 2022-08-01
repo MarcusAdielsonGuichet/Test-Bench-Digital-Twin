@@ -138,12 +138,12 @@
 
     <!--Index of variable = "26"-->
     <ScalarVariable name="ux" valueReference="25" variability="discrete" causality="input">
-      <Real start="0" />
+      <Real start="10" />
     </ScalarVariable>
 
     <!--Index of variable = "27"-->
     <ScalarVariable name="uy" valueReference="26" variability="discrete" causality="input">
-      <Real start="0" />
+      <Real start="-10" />
     </ScalarVariable>
 
 

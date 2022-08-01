@@ -6,6 +6,8 @@ import glob
 import subprocess
 import numpy as np
 import tempfile
+import random
+from scipy.optimize import fsolve
 
 
 class Model:
@@ -22,37 +24,37 @@ class Model:
         self.error=False #Need to replace with the Fmistatus class?
 
         #Internal inputs
-            #Parameters for CCX
-                #Time parameters [s]
-            self.first_increment_value = 1e-5
-            self.step_duration = 1
-            self.min_increment_value = 1e-3
-            self.max_increment_value = 1e-1
+        #Parameters for CCX
+        #Time parameters [s]
+        self.first_increment_value = 1e-5
+        self.step_duration = 1
+        self.min_increment_value = 1e-3
+        self.max_increment_value = 1e-1
 
-            self.disp_node_set_name ="ConstraintDisplacement"
-            elf.fixed_node_set_name ="ConstraintFixed"
-            self.analysis_type ="Static"
-            self.output_type = "Force"
+        self.disp_node_set_name ="ConstraintDisplacement"
+        self.fixed_node_set_name ="ConstraintFixed"
+        self.analysis_type ="Static"
+        self.output_type = "Force"
 
 
-            #Geometrical caracteristics
-            self.L =500 #Length of cantilever beam [mm]
+        #Geometrical caracteristics
+        self.L =600 #Length of cantilever beam [mm]
 
-            #First actuator pivot point coordinates, directing mostly horizontal displacement[mm]
-            self.x1=0
-            self.y1=50
+        #First actuator pivot point coordinates, directing mostly horizontal displacement[mm]
+        self.x1=0
+        self.y1=50
 
-            #Second actuator pivot point coordinates, directing mostly vertical displacement [mm]
-            self.x2=50
-            self.y2=0
+        #Second actuator pivot point coordinates, directing mostly vertical displacement [mm]
+        self.x2=50
+        self.y2=0
 
-            #Actuators resting lengths for respective pivot points  [mm]
-            self.l1=50
-            self.l2=50
+        #Actuators resting lengths for respective pivot points [mm]
+        self.l1=50
+        self.l2=50
 
-            #Beam displacement origin point, aka crosspoint between the two actuators at rest?
-            self.yc=0
-            self.yc=0
+        #Beam displacement origin point, aka crosspoint between the two actuators at rest?[mm]
+        self.xc=0
+        self.yc=0
 
 
         #External inputs
@@ -63,11 +65,11 @@ class Model:
         self.uy =0 #Initial vertical beam displacement [mm]
 
         #Outputs
-        self.Fxbo=0.0 #Resulting horizontal force actuator-->beam?
-        self.Fybo=0.0 #Resulting vertical force actuator-->beam?
-        self.Fxfo=0.0 #Resulting horizontal force beam-->frame?
-        self.Fyfo=0.0 #Resulting vertical force beam-->frame?
-        self.Mzfo=0.0 #Resulting z axistorque beam-->frame?
+        self.Fxbo=0.0 #Resulting horizontal force beam-->actuator[N]
+        self.Fybo=0.0 #Resulting vertical force beam-->actuator[N]
+        self.Fxfo=0.0 #Resulting horizontal force beam-->frame[N]
+        self.Fyfo=0.0 #Resulting vertical force beam-->frame[N]
+        self.Mzfo=0.0 #Resulting z axistorque beam-->frame[N.m]
 
         self.dat="" #Displacement and force output file
         self.mass_mat="" #Mass matrix output file
@@ -84,7 +86,7 @@ class Model:
             6: "first_increment_value",
             7: "step_duration",
             8: "min_increment_value",
-            9: "max_increment_value"
+            9: "max_increment_value",
             10: "disp_node_set_name",
             11: "fixed_node_set_name",
             12: "analysis_type",
@@ -125,41 +127,44 @@ class Model:
         if self.error==False:
             if self.nb_steps_prior<= self.total_steps-1:
                 if self.nb_steps_prior==0:#Checking for the first step
+                    print("Step 1...\nSearching for first inp file")
                     #Finding the inp file
                     step_dir=self.rout_dir
                     for root, dirs, files in os.walk(step_dir):
                         for file in files:
                             if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
                                 new_step_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
+                                print("Inp file found, moving to calculations")
                                 break
                             else:
                                 continue
                         break
 
-
                 elif self.nb_steps_prior>0:#Nth step check
                     new_step_folder_name=f"Step_{self.nb_steps_prior+1}"#Step directory name
                     new_step_name=f"init_Step_{self.nb_steps_prior+1}"#Step inp file name
+                    print(f"Step {self.nb_steps_prior+1}...")
 
                     #Necessary procedure for the *RESTART function, check ccx manual for more info
                     step_dir=self.copy_rename_rout_to_rin(new_step_folder_name,new_step_name)
 
-                    #Generate the step inp file
-                    self.step_inpfile_writer(step_dir,new_step_name)
+                self.actuators_input()
 
+                #Generate the step inp file
+                self.step_inpfile_writer(step_dir,new_step_name)
 
+                print("Beginning step calculations...")
                 out=self.run_inp_file(step_dir,new_step_name)
-                self.update_outputs(step_dir,new_step_name)
-                self.update_inputs()
-
+                print("CCX run complete, checking for errors...")
 
                 if "Job finished" in out:
-                    #self._update_outputs()#need to modify this with the actual outputs
+                    print("No errors, updating variables...")
+                    self.update_outputs(step_dir,new_step_name)
                     self.nb_steps_prior+=1
                     if self.nb_steps_prior< self.total_steps:
-                        print(f"\nStep {self.nb_steps_prior} done\nMoving on to Step {self.nb_steps_prior+1}...\n")
+                        print(f"Done\n\n")
                     elif self.nb_steps_prior==self.total_steps:
-                        print(f"Step {self.nb_steps_prior} done\n\nSimulation run complete with no errors")
+                        print(f"Done\n\nSimulation run complete with no errors\n")
                     return Fmi2Status.ok
                 else:
                     self.error=True
@@ -220,86 +225,121 @@ class Model:
 
         bytes = pickle.dumps(
             (
+            self.ccx_exe_path,
+            self.work_dir,
+            self.rout_dir,
+            self.nb_steps_prior,
+            self.total_steps,
+            self.error,
             self.first_increment_value,
             self.step_duration,
             self.min_increment_value,
             self.max_increment_value,
-            self.output_type,
-            self.U1i,
-            self.U2i,
             self.disp_node_set_name,
             self.fixed_node_set_name,
-            self.nb_steps_prior,
-            self.ccx_exe_path,
-            self.work_dir,
-            self.rout_dir,
-            self.dat_filename,
-            self.mass_matrix,
-            self.stiff_matrix,
             self.analysis_type,
-            self.error,
-            self.F1o,
-            self.F2o,
-            self.F4o,
-            self.F5o,
-            self.F6o
+            self.output_type,
+            self.L,
+            self.x1,
+            self.y1,
+            self.x2,
+            self.y2,
+            self.l1,
+            self.l2,
+            self.xc,
+            self.yc,
+            self.delta_l1,
+            self.delta_l2,
+            self.ux,
+            self.uy,
+            self.Fxbo,
+            self.Fybo,
+            self.Fxfo,
+            self.Fyfo,
+            self.Mzfo,
+            self.dat,
+            self.mass_mat,
+            self.stiff_mat
             )
         )
         return Fmi2Status.ok, bytes
 
     def fmi2ExtDeserialize(self, bytes) -> int:
         (
+            ccx_exe_path,
+            work_dir,
+            rout_dir,
+            nb_steps_prior,
+            total_steps,
+            error,
             first_increment_value,
             step_duration,
             min_increment_value,
             max_increment_value,
-            output_type,
-            U1i,
-            U2i,
             disp_node_set_name,
             fixed_node_set_name,
-            last_degree_freedom,
-            nb_steps_prior,
-            ccx_exe_path,
-            work_dir,
-            rout_dir,
-            dat_filename,
-            mass_matrix,
-            stiff_matrix,
-            error,
             analysis_type,
-            F1o,
-            F2o,
-            F4o,
-            F5o,
-            F6o
+            output_type,
+            L,
+            x1,
+            y1,
+            x2,
+            y2,
+            l1,
+            l2,
+            xc,
+            yc,
+            delta_l1,
+            delta_l2,
+            ux,
+            uy,
+            Fxbo,
+            Fybo,
+            Fxfo,
+            Fyfo,
+            Mzfo,
+            dat,
+            mass_mat,
+            stiff_mat
 
 
         ) = pickle.loads(bytes)
 
-        self.first_increment_value =first_increment_value
-        self.step_duration =step_duration
+        self.ccx_exe_path=ccx_exe_path
+        self.work_dir=work_dir
+        self.rout_dir=rout_dir
+        self.nb_steps_prior=nb_steps_prior
+        self.total_steps=total_steps
+        self.error=error
+        self.first_increment_value=first_increment_value
+        self.step_duration=step_duration
         self.min_increment_value =min_increment_value
         self.max_increment_value =max_increment_value
-        self.output_type =output_type
-        self.U1i =U1i
-        self.U2i =U2i
         self.disp_node_set_name =disp_node_set_name
         self.fixed_node_set_name =fixed_node_set_name
-        self.nb_steps_prior =nb_steps_prior
-        self.ccx_exe_path =ccx_exe_path
-        self.work_dir =work_dir
         self.analysis_type =analysis_type
-        self.rout_dir=rout_dir
-        self.dat_filename=dat_filename
-        self.mass_matrix=mass_matrix
-        self.stiff_matrix=stiff_matrix
-        self.error=error
-        self.F1o=F1o
-        self.F2o=F2o
-        self.F4o=F4o
-        self.F5o=F5o
-        self.F6o=F6o
+        self.output_type =output_type
+        self.L =L
+        self.x1 =x1
+        self.y1 =y1
+        self.x2 =x2
+        self.y2 =y2
+        self.l1 =l1
+        self.l2 =l2
+        self.xc =xc
+        self.yc =yc
+        self.delta_l1 =delta_l1
+        self.delta_l2 =delta_l2
+        self.ux =ux
+        self.uy =uy
+        self.Fxbo= Fxbo
+        self.Fybo =Fybo
+        self.Fxfo =Fxfo
+        self.Fyfo =Fyfo
+        self.Mzfo =Mzfo
+        self.dat =dat
+        self.mass_mat= mass_mat
+        self.stiff_mat=stiff_mat
 
         self._update_outputs()
 
@@ -322,34 +362,18 @@ class Model:
         return Fmi2Status.ok, values
 
     def _update_outputs(self):
-        #modify to satisfy the present problem, the cantilever beam
-        #Outputs:
-            #Displacement forces
-            #Displacement vectors
-            #Mass matrix
-            #Stiffness matrix
-        #
-        # self.RPio =#need info from Giuseppe
-        # self.Dfbkio =#need info from Giuseppe
-        # self.Ffbkio =#need info from Giuseppe
-        # self.Tfbkio =#need info from Giuseppe
-        # self.dat_filename=os.path.join(step_dir, new_step_name+".dat")
-        # print(self.dat_filename)
-        # self.F1o=self.get_force_sum(self.dat_filename, self.disp_node_set_name)[0]
-        # self.F2o=self.get_force_sum(self.dat_filename, self.disp_node_set_name)[1]
-        # self.F4o=-self.F2o
-        # self.F5o=-self.F1o
-        # self.F6o=self.F2o*self.L
-        # print()
         return Fmi2Status.ok
 
     def update_outputs(self,step_dir,new_step_name):
-        self.dat_filename=os.path.join(step_dir, new_step_name+".dat")
-        self.F1o=self.get_force_sum(self.dat_filename, self.disp_node_set_name)[0]
-        self.F2o=self.get_force_sum(self.dat_filename, self.disp_node_set_name)[2]
-        self.F4o=-self.F2o
-        self.F5o=-self.F1o
-        self.F6o=self.F2o*self.L
+        self.dat=os.path.join(step_dir, new_step_name+".dat")
+        self.Fxbo=-self.get_force_sum(self.dat, self.disp_node_set_name)[0]
+        self.Fybo=-self.get_force_sum(self.dat, self.disp_node_set_name)[2]
+        self.Fxfo=-self.Fxbo
+        # print(f"Theorical Fxfo={self.Fxfo}, Calculated Fxfo={self.get_force_sum(self.dat, self.fixed_node_set_name)[0]}")
+        self.Fyfo=-self.Fybo
+        # print(f"Theorical Fyfo={self.Fyfo}, Calculated Fyfo={self.get_force_sum(self.dat, self.fixed_node_set_name)[2]}")
+        self.Mzfo=self.Fybo*self.L*1e-3
+        # print(f"Theorical Mzfo={self.Mzfo}, Calculated Mzfo={self.get_force_sum(self.dat, self.fixed_node_set_name)[2]*self.L}")
 
     def init_equations(self,tuple):
         xc,yc=tuple
@@ -360,27 +384,30 @@ class Model:
         return [(self.xc+ux-self.x1)**2+(self.yc+uy-self.y1)**2-(self.l1+self.delta_l1)**2,(self.xc+ux-self.x2)**2+(self.yc+uy-self.y2)**2-(self.l2+self.delta_l2)**2]
 
     def actuators_input(self):
-        # global xc
-        # global yc
-        # global ux
-        # global uy
+        #Random external input from FMU  generator
+        new_delta_l1=0
+        new_delta_l2=0
+        new_delta_l1=random.uniform(self.delta_l1-0.5,self.delta_l1+0.5)
+        while new_delta_l1<-5 or new_delta_l1>5:
+            new_delta_l1=random.uniform(self.delta_l1-0.5,self.delta_l1+0.5)
+        self.delta_l1=new_delta_l1
+
+        new_delta_l2=random.uniform(self.delta_l2-0.5,self.delta_l2+0.5)
+        while new_delta_l2<-20 or new_delta_l1>20:
+            new_delta_l2=random.uniform(self.delta_l2-0.5,self.delta_l2+0.5)
+        self.delta_l2=new_delta_l2
+
+
         if self.nb_steps_prior==0:#Add to initialisation
-            self.xc, self.yc=  fsolve(init_equations, (self.x2,self.y1))
-            print(f"xc={self.xc}\nyc={self.yc}\nux={self.ux}\nuy={self.uy}")
+            self.xc, self.yc=  fsolve(self.init_equations, (self.x2,self.y1))
+            self.ux, self.uy= fsolve(self.step_equations, (self.delta_l1,self.delta_l2))
+            print(f"\nGiven delta_l1={self.delta_l1} mm and delta_l2={self.delta_l2} mm,\nux={self.ux} mm\nuy={self.uy} mm\n")
         else :
-            self.ux, self.uy= fsolve(step_equations, (self.delta_l1,self.delta_l2))
-            print(f"ux={self.ux}\nuy={self.uy}\nxc={self.xc}\nyc={self.yc}")
-
-    # def update_inputs(self):
-    #     self.U1i=self.F1o*self.L/(200000*50*10)#U1i[mm]=L[mm]*F1o[N]/(E[MPa]*Area[mm²]) with Area=width*height
-    #     self.U2i=self.F2o*self.L**3/(3*200000*50*10**3/12)#U2i[mm]=L^3[mm^3]*F2o[N]/(3*E[MPa]*I[mm^4]) with I=(width*height^3)/12
-
+            self.ux, self.uy= fsolve(self.step_equations, (self.delta_l1,self.delta_l2))
+            print(f"\nGiven delta_l1={self.delta_l1} mm and delta_l2={self.delta_l2} mm,\nux={self.ux}mm\nuy={self.uy} mm\n")
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
-        #self.work_dir=tempfile.mkdtemp()
-        # New step folder path
-        #print(os.getcwd())
-        global rout_file_name
+        global rout_file_name#Not adding this creates an error for some reason
         step_dir = os.path.join(self.work_dir, new_step_folder_name)
         # Create the directory if it doesn't already exist
         try:
@@ -427,10 +454,21 @@ class Model:
 
 
     def step_inpfile_writer(self, step_dir,new_step_name):#needs a previous run, rename the last_step.rout into new_inp_file.rin
-
-        new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
-        #Continuing the previous step calculation
-        new_inp.write("*RESTART, READ\n")
+        if self.nb_steps_prior!=0:
+            new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
+            #Continuing the previous step calculation
+            new_inp.write("*RESTART, READ\n")
+        elif self.nb_steps_prior==0:
+            new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'r+')
+            step_line_number=0
+            lines=new_inp.readlines()
+            new_inp.seek(0)
+            new_inp.truncate()
+            for line_nb,line in enumerate(lines):
+                if "*STEP" in line:
+                    step_line_number=line_nb
+                    break
+            new_inp.writelines(lines[:step_line_number])
 
         #Step characteristics and analysis type
         new_inp.write("*STEP, INC=1000000\n")
@@ -441,12 +479,12 @@ class Model:
         new_inp.write("*RESTART, WRITE\n")
 
         #Displaced nodes characteristics, add force loads?
-        if self.U1i!=0:
+        if self.ux!=0:
             new_inp.write("*BOUNDARY\n")
-            new_inp.write(f"{self.disp_node_set_name},1,1,{self.U1i}\n")
-        if self.U2i!=0:
+            new_inp.write(f"{self.disp_node_set_name},1,1,{self.ux}\n")
+        if self.uy!=0:
             new_inp.write("*BOUNDARY\n")
-            new_inp.write(f"{self.disp_node_set_name},3,3,{self.U2i}\n")
+            new_inp.write(f"{self.disp_node_set_name},3,3,{self.uy}\n")
 
         #Fixed nodes
         new_inp.write("*BOUNDARY\n")
@@ -458,15 +496,17 @@ class Model:
         if self.output_type=="Disp":
             new_inp.write("\nU\n")
         elif self.output_type=="Force":
-            new_inp.write(",Totals=Yes\nRF\n")
+            new_inp.write(",Totals=Only\nRF\n")
+
+        new_inp.write(f"*NODE PRINT, NSET={self.fixed_node_set_name},Totals=Only\nRF\n")
 
         new_inp.write("*END STEP\n")
 
-        # #Mass and stiffness storage
+        # #Mass and stiffness matrices storage
         # new_inp.write("*STEP\n")
         # new_inp.write("*FREQUENCY, SOLVER=MATRIXSTORAGE\n")
         # new_inp.write("*END STEP")
-        # new_inp.close()
+        new_inp.close()
 
     def run_inp_file(self,step_dir,new_step_name):
         os.chdir(step_dir)
@@ -609,33 +649,18 @@ if __name__ == "__main__":
     fea.first_increment_value = 1E-5 # first increment value[s]
     fea.min_increment_value =1E-8 # min increment value[s]
     fea.max_increment_value= 1E-1 # max increment value[s]
-    t = np.linspace(0.0, 200, 1) # Time axis.
-    u =random.sample(range(-20,20), 20) #displacement array[mm]
-    #print(f"{u}\n")
+    fea.total_steps=3
 
     fea.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
     fea.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
     fea.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"
 
-
-
     fea.output_type="Force"
     fea.disp_node_set_name="ConstraintDisplacement"
     fea.fixed_node_set_name="ConstraintFixed"
     fea.analysis_type="Static"
-    fea.nb_steps_prior=0
-    fea.total_steps=500
 
-    # output
-    #RN = np.zeros(step)
-
-    for no_step_prior in range(fea.total_steps):
-        print(f"U1i={fea.U1i}\n")
-        print(f"U2i={fea.U2i}\n")
-        #fea.U1i = u[no_step_prior]
-        fea.fmi2DoStep(1,1, no_step_prior)
-        print(f"F1o={fea.F1o}\n")
-    # plt.plot(t, RN)
-    # plt.ylabel("RN")
-    # plt.xlabel("t")
-    # plt.show()
+    for step in range(fea.total_steps):
+        fea.fmi2DoStep(1,1, step)
+        # print(f"Fybo={fea.Fybo}")
+        # print(f"Fyfo={fea.Fyfo}\n\n")
