@@ -319,9 +319,29 @@ class Model:
         self.F5o=-self.F1o
         self.F6o=self.F2o*self.L
 
-    def update_inputs(self):
-        self.U1i=self.F1o*self.L/(200000*50*10)#U1i[mm]=L[mm]*F1o[N]/(E[MPa]*Area[mm²]) with Area=width*height
-        self.U2i=self.F2o*self.L**3/(3*200000*50*10**3/12)#U2i[mm]=L^3[mm^3]*F2o[N]/(3*E[MPa]*I[mm^4]) with I=(width*height^3)/12
+    def init_equations(self,tuple):
+        xc,yc=tuple
+        return [(xc-self.x1)**2+(yc-self.y1)**2-self.l1**2,(xc-self.x2)**2+(yc-self.y2)**2-self.l2**2]
+
+    def step_equations(self,tuple):
+        ux,uy=tuple
+        return [(self.xc+ux-self.x1)**2+(self.yc+uy-self.y1)**2-(self.l1+self.delta_l1)**2,(self.xc+ux-self.x2)**2+(self.yc+uy-self.y2)**2-(self.l2+self.delta_l2)**2]
+
+    def actuators_input(self):
+        # global xc
+        # global yc
+        # global ux
+        # global uy
+        if self.nb_steps_prior==0:#Add to initialisation
+            self.xc, self.yc=  fsolve(init_equations, (self.x2,self.y1))
+            print(f"xc={self.xc}\nyc={self.yc}\nux={self.ux}\nuy={self.uy}")
+        else :
+            self.ux, self.uy= fsolve(step_equations, (self.delta_l1,self.delta_l2))
+            print(f"ux={self.ux}\nuy={self.uy}\nxc={self.xc}\nyc={self.yc}")
+
+    # def update_inputs(self):
+    #     self.U1i=self.F1o*self.L/(200000*50*10)#U1i[mm]=L[mm]*F1o[N]/(E[MPa]*Area[mm²]) with Area=width*height
+    #     self.U2i=self.F2o*self.L**3/(3*200000*50*10**3/12)#U2i[mm]=L^3[mm^3]*F2o[N]/(3*E[MPa]*I[mm^4]) with I=(width*height^3)/12
 
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
