@@ -53,8 +53,8 @@ class Model:
         self.l2=50
 
         #Beam displacement origin point, aka crosspoint between the two actuators at rest?[mm]
-        self.xc=0
-        self.yc=0
+        self.xc=self.x2
+        self.yc=self.y1
 
 
         #External inputs
@@ -69,7 +69,7 @@ class Model:
         self.Fybo=0.0 #Resulting vertical force beam-->actuator[N]
         self.Fxfo=0.0 #Resulting horizontal force beam-->frame[N]
         self.Fyfo=0.0 #Resulting vertical force beam-->frame[N]
-        self.Mzfo=0.0 #Resulting z axistorque beam-->frame[N.m]
+        self.Mzfo=0.0 #Resulting z axis torque beam-->frame[N.m]
 
         self.dat="" #Displacement and force output file
         self.mass_mat="" #Mass matrix output file
@@ -132,7 +132,7 @@ class Model:
                     step_dir=self.rout_dir
                     for root, dirs, files in os.walk(step_dir):
                         for file in files:
-                            if file.endswith('.inp'):#hypothesis that there is only one inp file per step directory
+                            if file.endswith('.inp'):#hypothesis that there is at least and only one inp file per step directory
                                 new_step_name=os.path.splitext(os.path.basename(file))[0] #ccx only needs the filename, not the extension
                                 print("Inp file found, moving to calculations")
                                 break
@@ -148,6 +148,7 @@ class Model:
                     #Necessary procedure for the *RESTART function, check ccx manual for more info
                     step_dir=self.copy_rename_rout_to_rin(new_step_folder_name,new_step_name)
 
+                #Update inputs
                 self.actuators_input()
 
                 #Generate the step inp file
@@ -367,23 +368,28 @@ class Model:
     def update_outputs(self,step_dir,new_step_name):
         self.dat=os.path.join(step_dir, new_step_name+".dat")
         self.Fxbo=-self.get_force_sum(self.dat, self.disp_node_set_name)[0]
+        print(f"FXbo={self.Fxbo} N")
         self.Fybo=-self.get_force_sum(self.dat, self.disp_node_set_name)[2]
+        print(f"Fybo={self.Fybo} N")
         self.Fxfo=-self.Fxbo
-        # print(f"Theorical Fxfo={self.Fxfo}, Calculated Fxfo={self.get_force_sum(self.dat, self.fixed_node_set_name)[0]}")
+        print(f"Fxfo={self.Fxfo} N")
         self.Fyfo=-self.Fybo
-        # print(f"Theorical Fyfo={self.Fyfo}, Calculated Fyfo={self.get_force_sum(self.dat, self.fixed_node_set_name)[2]}")
+        print(f"Fyfo={self.Fyfo} N")
         self.Mzfo=self.Fybo*self.L*1e-3
-        # print(f"Theorical Mzfo={self.Mzfo}, Calculated Mzfo={self.get_force_sum(self.dat, self.fixed_node_set_name)[2]*self.L}")
+        print(f"Mzfo={self.Mzfo} N.m")
 
     def init_equations(self,tuple):
+        """Geometrical equations determining the actuators' resting crosspoint"""
         xc,yc=tuple
         return [(xc-self.x1)**2+(yc-self.y1)**2-self.l1**2,(xc-self.x2)**2+(yc-self.y2)**2-self.l2**2]
 
     def step_equations(self,tuple):
+        """Geometrical equations determining the displacements inputs"""
         ux,uy=tuple
         return [(self.xc+ux-self.x1)**2+(self.yc+uy-self.y1)**2-(self.l1+self.delta_l1)**2,(self.xc+ux-self.x2)**2+(self.yc+uy-self.y2)**2-(self.l2+self.delta_l2)**2]
 
     def actuators_input(self):
+        """Updates the actuators inputs and prints the new calculated displacements for the cantilever beam"""
         #Random external input from FMU  generator
         new_delta_l1=0
         new_delta_l2=0
@@ -404,10 +410,13 @@ class Model:
             print(f"\nGiven delta_l1={self.delta_l1} mm and delta_l2={self.delta_l2} mm,\nux={self.ux} mm\nuy={self.uy} mm\n")
         else :
             self.ux, self.uy= fsolve(self.step_equations, (self.delta_l1,self.delta_l2))
-            print(f"\nGiven delta_l1={self.delta_l1} mm and delta_l2={self.delta_l2} mm,\nux={self.ux}mm\nuy={self.uy} mm\n")
+            print(f"\nGiven delta_l1={self.delta_l1} mm and delta_l2={self.delta_l2} mm,\nux={self.ux} mm\nuy={self.uy} mm\n")
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
-        global rout_file_name#Not adding this creates an error for some reason
+        """Copies a previous run .rin file to a newly-created step folder directory, renaming it as new_step_name.rout.
+        This procedure is mandatory for non-continuous multi-steps analyses.
+        Check *RESTART keyword on CCX Crunchix manual for more information."""
+        rout_file_name=""
         step_dir = os.path.join(self.work_dir, new_step_folder_name)
         # Create the directory if it doesn't already exist
         try:
@@ -454,6 +463,10 @@ class Model:
 
 
     def step_inpfile_writer(self, step_dir,new_step_name):#needs a previous run, rename the last_step.rout into new_inp_file.rin
+        """Creates and writes the inp for the step, according to the CCX manual keywords.
+        For this FMU/experiment, only one node set is defined for displacement values, on the x and z defined in the FreeCAD model.
+        The analysis is static and returns the total forces exerted on the  displaced node set, as the fixed node set.
+        Matrix storage is in comments, if further studies requires it"""
         if self.nb_steps_prior!=0:
             new_inp=open(os.path.join(step_dir, new_step_name+".inp"), 'w')
             #Continuing the previous step calculation
@@ -508,7 +521,9 @@ class Model:
         # new_inp.write("*END STEP")
         new_inp.close()
 
-    def run_inp_file(self,step_dir,new_step_name):
+    def run_inp_file(self,step_dir:str,new_step_name:str)->str:
+        """Uses the subprocess.run python function to run CCX on the inp file.
+        Returns the output console lines generated by CCX."""
         os.chdir(step_dir)
         #Taking out the "-i", command due to an error
         output=subprocess.run(
@@ -523,6 +538,7 @@ class Model:
         return output
 
     def get_disp(self, dat_filename, node_set_name):
+        """Reads the dat output file, and return an array containing the node set number and subsequent displacement values"""
         file=open(dat_filename,'r')
         result_disp=[]
         disp_section=False
@@ -539,6 +555,7 @@ class Model:
         return result_disp
 
     def get_node_forces(self, dat_filename,node_set_name):
+        """Reads the dat output file, and return an array containing the node set number and subsequent external forces values"""
         file=open(dat_filename,'r')
         result_forces=[]
         node_force_section=False
@@ -555,6 +572,7 @@ class Model:
         return result_forces
 
     def get_force_sum(self, dat_filename,node_set_name):
+        """Reads the dat output file, and return an array containing the node set number and subsequent external forces values"""
         file=open(dat_filename,'r')
         forces_section=False
         #result_force_sum=[]
@@ -662,5 +680,3 @@ if __name__ == "__main__":
 
     for step in range(fea.total_steps):
         fea.fmi2DoStep(1,1, step)
-        # print(f"Fybo={fea.Fybo}")
-        # print(f"Fyfo={fea.Fyfo}\n\n")
