@@ -7,14 +7,14 @@ import subprocess
 import numpy as np
 import tempfile
 import random
-from scipy.optimize import fsolve
+
 
 
 class Model:
     def __init__(self) -> None:
 
         #Directories
-        self.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
+        self.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"#only need path env variable?
         self.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"
         self.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"
 
@@ -40,27 +40,7 @@ class Model:
         #Geometrical caracteristics
         self.L =600 #Length of cantilever beam [mm]
 
-        #First actuator pivot point coordinates, directing mostly horizontal displacement[mm]
-        self.x1=0
-        self.y1=50
-
-        #Second actuator pivot point coordinates, directing mostly vertical displacement [mm]
-        self.x2=50
-        self.y2=0
-
-        #Actuators resting lengths for respective pivot points [mm]
-        self.l1=50
-        self.l2=50
-
-        #Beam displacement origin point, aka crosspoint between the two actuators at rest?[mm]
-        self.xc=self.x2
-        self.yc=self.y1
-
-
         #External inputs
-        self.delta_l1=0 #First actuator length change [mm]
-        self.delta_l2=0 #Second actuator length change [mm]
-
         self.ux =0 #Initial horizontal beam displacement [mm]
         self.uy =0 #Initial vertical beam displacement [mm]
 
@@ -71,9 +51,9 @@ class Model:
         self.Fyfo=0.0 #Resulting vertical force beam-->frame[N]
         self.Mzfo=0.0 #Resulting z axis torque beam-->frame[N.m]
 
-        self.dat="" #Displacement and force output file
-        self.mass_mat="" #Mass matrix output file
-        self.stiff_mat="" #Stiffness matrix output file
+        self.dat="" #Displacement and force output filename
+        self.mass_mat="" #Mass matrix output filename
+        self.stiff_mat="" #Stiffness matrix output filename
 
 
         self.reference_to_attribute = {
@@ -92,26 +72,16 @@ class Model:
             12: "analysis_type",
             13: "output_type",
             14: "L",
-            15: "x1",
-            16: "y1",
-            17: "x2",
-            18: "y2",
-            19: "l1",
-            20: "l2",
-            21: "xc",
-            22: "yc",
-            23: "delta_l1",
-            24: "delta_l2",
-            25: "ux",
-            26: "uy",
-            27: "Fxbo",
-            28: "Fybo",
-            29: "Fxfo",
-            30: "Fyfo",
-            31: "Mzfo",
-            32: "dat",
-            33: "mass_mat",
-            34: "stiff_mat"
+            15: "ux",
+            16: "uy",
+            17: "Fxbo",
+            18: "Fybo",
+            19: "Fxfo",
+            20: "Fyfo",
+            21: "Mzfo",
+            22: "dat",
+            23: "mass_mat",
+            24: "stiff_mat"
         }
 
         self._update_outputs()
@@ -122,7 +92,6 @@ class Model:
             #First step with error(wrong inp name usually)
             #Nth step without error
             #Nth step with error, due to existing dir from previous run, wrong inp, step characteristics not compatible with exp,
-
 
         if self.error==False:
             if self.nb_steps_prior<= self.total_steps-1:
@@ -149,7 +118,7 @@ class Model:
                     step_dir=self.copy_rename_rout_to_rin(new_step_folder_name,new_step_name)
 
                 #Update inputs
-                self.actuators_input()
+                #add stuff here? Need cosimulation knowledge
 
                 #Generate the step inp file
                 self.step_inpfile_writer(step_dir,new_step_name)
@@ -241,16 +210,6 @@ class Model:
             self.analysis_type,
             self.output_type,
             self.L,
-            self.x1,
-            self.y1,
-            self.x2,
-            self.y2,
-            self.l1,
-            self.l2,
-            self.xc,
-            self.yc,
-            self.delta_l1,
-            self.delta_l2,
             self.ux,
             self.uy,
             self.Fxbo,
@@ -282,16 +241,6 @@ class Model:
             analysis_type,
             output_type,
             L,
-            x1,
-            y1,
-            x2,
-            y2,
-            l1,
-            l2,
-            xc,
-            yc,
-            delta_l1,
-            delta_l2,
             ux,
             uy,
             Fxbo,
@@ -321,16 +270,6 @@ class Model:
         self.analysis_type =analysis_type
         self.output_type =output_type
         self.L =L
-        self.x1 =x1
-        self.y1 =y1
-        self.x2 =x2
-        self.y2 =y2
-        self.l1 =l1
-        self.l2 =l2
-        self.xc =xc
-        self.yc =yc
-        self.delta_l1 =delta_l1
-        self.delta_l2 =delta_l2
         self.ux =ux
         self.uy =uy
         self.Fxbo= Fxbo
@@ -377,40 +316,6 @@ class Model:
         print(f"Fyfo={self.Fyfo} N")
         self.Mzfo=self.Fybo*self.L*1e-3
         print(f"Mzfo={self.Mzfo} N.m")
-
-    def init_equations(self,tuple):
-        """Geometrical equations determining the actuators' resting crosspoint"""
-        xc,yc=tuple
-        return [(xc-self.x1)**2+(yc-self.y1)**2-self.l1**2,(xc-self.x2)**2+(yc-self.y2)**2-self.l2**2]
-
-    def step_equations(self,tuple):
-        """Geometrical equations determining the displacements inputs"""
-        ux,uy=tuple
-        return [(self.xc+ux-self.x1)**2+(self.yc+uy-self.y1)**2-(self.l1+self.delta_l1)**2,(self.xc+ux-self.x2)**2+(self.yc+uy-self.y2)**2-(self.l2+self.delta_l2)**2]
-
-    def actuators_input(self):
-        """Updates the actuators inputs and prints the new calculated displacements for the cantilever beam"""
-        #Random external input from FMU  generator
-        new_delta_l1=0
-        new_delta_l2=0
-        new_delta_l1=random.uniform(self.delta_l1-0.5,self.delta_l1+0.5)
-        while new_delta_l1<-5 or new_delta_l1>5:
-            new_delta_l1=random.uniform(self.delta_l1-0.5,self.delta_l1+0.5)
-        self.delta_l1=new_delta_l1
-
-        new_delta_l2=random.uniform(self.delta_l2-0.5,self.delta_l2+0.5)
-        while new_delta_l2<-20 or new_delta_l1>20:
-            new_delta_l2=random.uniform(self.delta_l2-0.5,self.delta_l2+0.5)
-        self.delta_l2=new_delta_l2
-
-
-        if self.nb_steps_prior==0:#Add to initialisation
-            self.xc, self.yc=  fsolve(self.init_equations, (self.x2,self.y1))
-            self.ux, self.uy= fsolve(self.step_equations, (self.delta_l1,self.delta_l2))
-            print(f"\nGiven delta_l1={self.delta_l1} mm and delta_l2={self.delta_l2} mm,\nux={self.ux} mm\nuy={self.uy} mm\n")
-        else :
-            self.ux, self.uy= fsolve(self.step_equations, (self.delta_l1,self.delta_l2))
-            print(f"\nGiven delta_l1={self.delta_l1} mm and delta_l2={self.delta_l2} mm,\nux={self.ux} mm\nuy={self.uy} mm\n")
 
     def copy_rename_rout_to_rin(self,new_step_folder_name, new_step_name):
         """Copies a previous run .rin file to a newly-created step folder directory, renaming it as new_step_name.rout.
@@ -524,8 +429,8 @@ class Model:
     def run_inp_file(self,step_dir:str,new_step_name:str)->str:
         """Uses the subprocess.run python function to run CCX on the inp file.
         Returns the output console lines generated by CCX."""
-        os.chdir(step_dir)
-        #Taking out the "-i", command due to an error
+        os.chdir(step_dir)#Add comment
+        #Taking out the "-i", command due to an error, need more info from ccx
         output=subprocess.run(
             [self.ccx_exe_path,new_step_name],
             capture_output=True,
@@ -656,8 +561,6 @@ class Fmi2Status:
 
 
 if __name__ == "__main__":
-    # import matplotlib.pyplot as plt
-    import random
 
     # create FMU
     fea = Model()
@@ -667,7 +570,7 @@ if __name__ == "__main__":
     fea.first_increment_value = 1E-5 # first increment value[s]
     fea.min_increment_value =1E-8 # min increment value[s]
     fea.max_increment_value= 1E-1 # max increment value[s]
-    fea.total_steps=3
+    fea.total_steps=20
 
     fea.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"
     fea.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"

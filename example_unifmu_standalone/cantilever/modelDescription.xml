@@ -78,7 +78,7 @@
 
     <!--Index of variable = "14"-->
     <ScalarVariable name="output_type" valueReference="13" variability="discrete" causality="input">
-      <String start="Disp" />
+      <String start="Force" />
     </ScalarVariable>
 
     <!--Index of variable = "15"-->
