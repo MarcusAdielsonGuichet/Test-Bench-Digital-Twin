@@ -25,7 +25,5 @@ You should test the code with both approaches.
 #For Conda
 conda activate myenv
 
-#before running
+#To run the gui
 python -m fmpy.gui
-
-#modify the model.py for the moment
