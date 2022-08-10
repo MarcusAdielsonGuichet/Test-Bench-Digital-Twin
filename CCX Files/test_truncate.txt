@@ -1,0 +1,29 @@
+***********************************************************
+** constraints displacement node sets
+** written by write_node_sets_constraints_displacement function
+** ConstraintDisplacement
+*NSET,NSET=ConstraintDisplacement
+5,
+6,
+7,
+8,
+13,
+14,
+15,
+16,
+94,
+
+***********************************************************
+** Materials
+** written by write_materials function
+** Young's modulus unit is MPa = N/mm2
+** FreeCAD material name: St E 500
+** MaterialSolid
+*MATERIAL, NAME=MaterialSolid
+*ELASTIC
+210000, 0.300
+
+***********************************************************
+** Sections
+** written by write_femelementsets function
+*SOLID SECTION, ELSET=MaterialSolidSolid, MATERIAL=MaterialSolid
