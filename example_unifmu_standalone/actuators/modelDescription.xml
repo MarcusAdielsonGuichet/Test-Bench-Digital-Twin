@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='utf-8'?>
+<fmiModelDescription fmiVersion="2.0" modelName="unifmu" guid="77236337-210e-4e9c-8f2c-c1a0677db21b" author="Christian Møldrup Legaard" generationDateAndTime="2020-10-23T19:51:25Z" variableNamingConvention="flat" generationTool="unifmu">
+  <CoSimulation modelIdentifier="unifmu" needsExecutionTool="true" canNotUseMemoryManagementFunctions="false" canHandleVariableCommunicationStepSize="true" />
+  <LogCategories>
+    <Category name="logStatusWarning" />
+    <Category name="logStatusDiscard" />
+    <Category name="logStatusError" />
+    <Category name="logStatusFatal" />
+    <Category name="logStatusPending" />
+    <Category name="logAll" />
+  </LogCategories>
+  <ModelVariables>
+    <!--Index of variable = "1"-->
+    <ScalarVariable name="x1" valueReference="0" variability="discrete" causality="input">
+      <Real start="0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "2"-->
+    <ScalarVariable name="y1" valueReference="1" variability="discrete" causality="input">
+      <Real start="50" />
+    </ScalarVariable>
+
+    <!--Index of variable = "3"-->
+    <ScalarVariable name="x2" valueReference="2" variability="discrete" causality="input">
+      <Real start="50" />
+    </ScalarVariable>
+
+    <!--Index of variable = "4"-->
+    <ScalarVariable name="y2" valueReference="3" variability="discrete" causality="input">
+      <Real start="0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "5"-->
+    <ScalarVariable name="l1" valueReference="4" variability="discrete" causality="input">
+      <Real start="50" />
+    </ScalarVariable>
+
+    <!--Index of variable = "6"-->
+    <ScalarVariable name="l2" valueReference="5" variability="discrete" causality="input">
+      <Real start="50" />
+    </ScalarVariable>
+
+    <!--Index of variable = "7"-->
+    <ScalarVariable name="xc" valueReference="6" variability="discrete" causality="input">
+      <Real start="0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "8"-->
+    <ScalarVariable name="yc" valueReference="7" variability="discrete" causality="input">
+      <Real start="0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "9"-->
+    <ScalarVariable name="delta_l1" valueReference="8" variability="discrete" causality="input">
+      <Real start="0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "10"-->
+    <ScalarVariable name="delta_l2" valueReference="9" variability="discrete" causality="input">
+      <Real start="0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "11"-->
+    <ScalarVariable name="ux" valueReference="10" variability="discrete" causality="output">
+      <Real/>
+    </ScalarVariable>
+
+    <!--Index of variable = "12"-->
+    <ScalarVariable name="uy" valueReference="11" variability="discrete" causality="output">
+      <Real />
+    </ScalarVariable>
+
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="3" dependencies="" />
+      <Unknown index="6" dependencies="" />
+      <Unknown index="9" dependencies="" />
+      <Unknown index="12" dependencies="" />
+    </Outputs>
+    <InitialUnknowns>
+      <Unknown index="3" dependencies="" />
+      <Unknown index="6" dependencies="" />
+      <Unknown index="9" dependencies="" />
+      <Unknown index="12" dependencies="" />
+    </InitialUnknowns>
+  </ModelStructure>
+</fmiModelDescription>
