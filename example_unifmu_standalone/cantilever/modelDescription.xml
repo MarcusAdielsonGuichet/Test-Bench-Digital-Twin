@@ -87,105 +87,55 @@
     </ScalarVariable>
 
     <!--Index of variable = "16"-->
-    <ScalarVariable name="x1" valueReference="15" variability="discrete" causality="input">
-      <Real start="0" />
-    </ScalarVariable>
-
-    <!--Index of variable = "17"-->
-    <ScalarVariable name="y1" valueReference="16" variability="discrete" causality="input">
-      <Real start="50" />
-    </ScalarVariable>
-
-    <!--Index of variable = "18"-->
-    <ScalarVariable name="x2" valueReference="17" variability="discrete" causality="input">
-      <Real start="50" />
-    </ScalarVariable>
-
-    <!--Index of variable = "19"-->
-    <ScalarVariable name="y2" valueReference="18" variability="discrete" causality="input">
-      <Real start="0" />
-    </ScalarVariable>
-
-    <!--Index of variable = "20"-->
-    <ScalarVariable name="l1" valueReference="19" variability="discrete" causality="input">
-      <Real start="50" />
-    </ScalarVariable>
-
-    <!--Index of variable = "21"-->
-    <ScalarVariable name="l2" valueReference="20" variability="discrete" causality="input">
-      <Real start="50" />
-    </ScalarVariable>
-
-    <!--Index of variable = "22"-->
-    <ScalarVariable name="xc" valueReference="21" variability="discrete" causality="input">
-      <Real start="50" />
-    </ScalarVariable>
-
-    <!--Index of variable = "23"-->
-    <ScalarVariable name="yc" valueReference="22" variability="discrete" causality="input">
-      <Real start="50" />
-    </ScalarVariable>
-
-    <!--Index of variable = "24"-->
-    <ScalarVariable name="delta_l1" valueReference="23" variability="discrete" causality="input">
-      <Real start="0" />
-    </ScalarVariable>
-
-    <!--Index of variable = "25"-->
-    <ScalarVariable name="delta_l2" valueReference="24" variability="discrete" causality="input">
-      <Real start="0" />
-    </ScalarVariable>
-
-    <!--Index of variable = "26"-->
-    <ScalarVariable name="ux" valueReference="25" variability="discrete" causality="input">
+    <ScalarVariable name="ux" valueReference="15" variability="discrete" causality="input">
       <Real start="10" />
     </ScalarVariable>
 
-    <!--Index of variable = "27"-->
-    <ScalarVariable name="uy" valueReference="26" variability="discrete" causality="input">
+    <!--Index of variable = "17"-->
+    <ScalarVariable name="uy" valueReference="16" variability="discrete" causality="input">
       <Real start="-10" />
     </ScalarVariable>
 
 
 
 
-    <!--Index of variable = "28"-->
-    <ScalarVariable name="Fxbo" valueReference="27" variability="discrete" causality="output">
+    <!--Index of variable = "18"-->
+    <ScalarVariable name="Fxbo" valueReference="17" variability="discrete" causality="output">
       <Real />
     </ScalarVariable>
 
-    <!--Index of variable = "29"-->
-    <ScalarVariable name="Fybo" valueReference="28" variability="discrete" causality="output">
+    <!--Index of variable = "19"-->
+    <ScalarVariable name="Fybo" valueReference="18" variability="discrete" causality="output">
       <Real />
     </ScalarVariable>
 
-    <!--Index of variable = "30"-->
-    <ScalarVariable name="Fxfo" valueReference="29" variability="discrete" causality="output">
+    <!--Index of variable = "20"-->
+    <ScalarVariable name="Fxfo" valueReference="19" variability="discrete" causality="output">
       <Real />
     </ScalarVariable>
 
-    <!--Index of variable = "31"-->
-    <ScalarVariable name="Fyfo" valueReference="30" variability="discrete" causality="output">
+    <!--Index of variable = "21"-->
+    <ScalarVariable name="Fyfo" valueReference="20" variability="discrete" causality="output">
       <Real/>
     </ScalarVariable>
 
-    <!--Index of variable = "32"-->
-    <ScalarVariable name="Mzfo" valueReference="31" variability="discrete" causality="output">
+    <!--Index of variable = "22"-->
+    <ScalarVariable name="Mzfo" valueReference="21" variability="discrete" causality="output">
       <Real/>
     </ScalarVariable>
 
-    <!--Index of variable = "33"-->
-    <ScalarVariable name="dat" valueReference="32" variability="discrete" causality="output">
+    <!--Index of variable = "23"-->
+    <ScalarVariable name="dat" valueReference="22" variability="discrete" causality="output">
       <String/>
     </ScalarVariable>
 
-    <!--Index of variable = "34"-->
-    <ScalarVariable name="mass_mat" valueReference="33" variability="discrete" causality="output">
+    <!--Index of variable = "24"-->
+    <ScalarVariable name="mass_mat" valueReference="23" variability="discrete" causality="output">
       <String/>
     </ScalarVariable>
 
-    <!--Index of variable = "35"-->
-    <ScalarVariable name="stiff_mat" valueReference="34" variability="discrete" causality="output">
+    <!--Index of variable = "25"-->
+    <ScalarVariable name="stiff_mat" valueReference="24" variability="discrete" causality="output">
       <String/>
     </ScalarVariable>
 
