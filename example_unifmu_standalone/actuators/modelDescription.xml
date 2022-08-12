@@ -73,15 +73,11 @@
   </ModelVariables>
   <ModelStructure>
     <Outputs>
-      <Unknown index="3" dependencies="" />
-      <Unknown index="6" dependencies="" />
-      <Unknown index="9" dependencies="" />
+      <Unknown index="11" dependencies="" />
       <Unknown index="12" dependencies="" />
     </Outputs>
     <InitialUnknowns>
-      <Unknown index="3" dependencies="" />
-      <Unknown index="6" dependencies="" />
-      <Unknown index="9" dependencies="" />
+      <Unknown index="11" dependencies="" />
       <Unknown index="12" dependencies="" />
     </InitialUnknowns>
   </ModelStructure>

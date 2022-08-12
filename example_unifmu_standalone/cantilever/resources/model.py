@@ -14,9 +14,9 @@ class Model:
     def __init__(self) -> None:
 
         #Directories
-        self.ccx_exe_path=r"C:\Users\marcu\OneDrive\Desktop\calculix2.19win64\ccx\ccx_219.exe"#only need path env variable?
-        self.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"#work on a temp dir
-        self.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"#copy and paste in temp dir
+        self.ccx_exe_path=r".\..\calculix2.19win64\ccx\ccx_219.exe"
+        self.work_dir=r".\..\CCX Files\test_runs"#work on a temp dir
+        self.rout_dir=r".\..\test_runs\Step_1"#copy and paste in temp dir
 
         #Status checks
         self.nb_steps_prior=0
@@ -120,6 +120,14 @@ class Model:
                 return Fmi2Status.error
 
     def fmi2EnterInitializationMode(self):
+        print("Cleaning previous simulation")
+        step_dir=""
+        for root, dirs, files in os.walk(self.work_dir):
+            for dir in dirs:
+                if dir != "Step_1":
+                    step_dir = os.path.join(self.work_dir, dir)
+                    shutil.rmtree(step_dir, ignore_errors=True)
+
 
         print("\nSetting first inputs...\n")
         self.update_inputs()
