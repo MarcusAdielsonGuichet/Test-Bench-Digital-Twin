@@ -1,18 +1,13 @@
-Run in this folder:
-#Create the virtual env
-python -m venv venv
-#Activate the virtual env
-.\venv\Scripts\Activate.ps1
 
 #Install the wheel package
 pip install wheel
 
 Upgrade pip if asked
 #Install fmpy with all dependencies, can just be pip install fmpy[complete]
-python -m pip install fmpy[complete]
+pip install fmpy[complete]
 
 #Install fmu with all dependencies
-python -m pip install unifmu[python-backend]
+pip install unifmu[python-backend]
 
 
 Now there are two ways to test the FMU:
@@ -27,3 +22,10 @@ conda activate myenv
 
 #To run the gui
 python -m fmpy.gui
+
+
+Run in this folder:
+#Create the virtual env
+python -m venv venv
+#Activate the virtual env
+.\venv\Scripts\Activate.ps1

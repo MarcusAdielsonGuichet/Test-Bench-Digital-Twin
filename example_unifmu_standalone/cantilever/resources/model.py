@@ -14,9 +14,9 @@ class Model:
     def __init__(self) -> None:
 
         #Directories
-        self.ccx_exe_path=r".\..\calculix2.19win64\ccx\ccx_219.exe"
-        self.work_dir=r".\..\CCX Files\test_runs"#work on a temp dir
-        self.rout_dir=r".\..\test_runs\Step_1"#copy and paste in temp dir
+        self.ccx_exe_path=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\calculix2.19win64\ccx\ccx_219.exe"
+        self.work_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs"#work on a temp dir
+        self.rout_dir=r"C:\internship_github\Python-code-for-Test-Bench-Digital-Twin\CCX Files\test_runs\Step_1"#copy and paste in temp dir
 
         #Status checks
         self.nb_steps_prior=0
