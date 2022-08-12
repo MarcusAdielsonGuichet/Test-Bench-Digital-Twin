@@ -1,0 +1,1 @@
+{"fmus":{"{can}":"cantilever","{act}":"actuators"},"connections":{"{act}.actInstance.ux":["{can}.canInstance.ux"],"{act}.actInstance.uy":["{can}.canInstance.uy"]},"parameters":{}}

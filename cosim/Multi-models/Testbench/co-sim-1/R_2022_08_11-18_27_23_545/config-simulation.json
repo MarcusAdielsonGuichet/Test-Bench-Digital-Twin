@@ -1,0 +1,1 @@
+{"startTime":0,"endTime":10,"reportProgress":true,"liveLogInterval":0,"logLevels":{"{act}.actInstance":["logAll","logStatusDiscard","logStatusError","logStatusFatal","logStatusPending","logStatusWarning"],"{can}.canInstance":["logAll","logStatusDiscard","logStatusError","logStatusFatal","logStatusPending","logStatusWarning"]}}

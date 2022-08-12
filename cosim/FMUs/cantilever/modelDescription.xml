@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='utf-8'?>
+<fmiModelDescription fmiVersion="2.0" modelName="unifmu" guid="77236337-210e-4e9c-8f2c-c1a0677db21b" author="Christian Møldrup Legaard" generationDateAndTime="2020-10-23T19:51:25Z" variableNamingConvention="flat" generationTool="unifmu">
+  <CoSimulation modelIdentifier="unifmu" needsExecutionTool="true" canNotUseMemoryManagementFunctions="false" canHandleVariableCommunicationStepSize="true" />
+  <LogCategories>
+    <Category name="logStatusWarning" />
+    <Category name="logStatusDiscard" />
+    <Category name="logStatusError" />
+    <Category name="logStatusFatal" />
+    <Category name="logStatusPending" />
+    <Category name="logAll" />
+  </LogCategories>
+  <ModelVariables>
+
+    <!--Index of variable = "1"-->
+    <ScalarVariable name="ccx_exe_path" valueReference="0" variability="fixed" causality="parameter">
+      <String start="C:\\Users\\marcu\\OneDrive\\Desktop\\calculix2.19win64\\ccx\\ccx_219.exe" />
+    </ScalarVariable>
+
+    <!--Index of variable = "2"-->
+    <ScalarVariable name="work_dir" valueReference="1" variability="fixed" causality="parameter" >
+      <String start="C:\\internship_github\\Python-code-for-Test-Bench-Digital-Twin\\CCX Files\\test_runs" />
+    </ScalarVariable>
+
+    <!--Index of variable = "3"-->
+    <ScalarVariable name="rout_dir" valueReference="2" variability="tunable" causality="parameter">
+      <String start="C:\\internship_github\\Python-code-for-Test-Bench-Digital-Twin\\CCX Files\\test_runs\\Step_1" />
+    </ScalarVariable>
+
+    <!--Index of variable = "4"-->
+    <ScalarVariable name="nb_steps_prior" valueReference="3" variability="tunable" causality="parameter">
+      <Integer start="0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "5"-->
+    <ScalarVariable name="total_steps" valueReference="4" variability="tunable" causality="parameter">
+      <Integer start="20" />
+    </ScalarVariable>
+
+    <!--Index of variable = "6"-->
+    <ScalarVariable name="error" valueReference="5" variability="tunable" causality="parameter">
+      <Boolean start="false" />
+    </ScalarVariable>
+
+    <!--Index of variable = "7"-->
+    <ScalarVariable name="first_increment_value" valueReference="6" variability="tunable" causality="parameter">
+      <Real start="1e-5" />
+    </ScalarVariable>
+
+    <!--Index of variable = "8"-->
+    <ScalarVariable name="step_duration" valueReference="7" variability="tunable" causality="parameter">
+      <Real start="1.0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "9"-->
+    <ScalarVariable name="min_increment_value" valueReference="8" variability="tunable" causality="parameter">
+      <Real start="1e-3" />
+    </ScalarVariable>
+
+    <!--Index of variable = "10"-->
+    <ScalarVariable name="max_increment_value" valueReference="9" variability="tunable" causality="parameter">
+      <Real start="1e-1" />
+    </ScalarVariable>
+
+    <!--Index of variable = "11"-->
+    <ScalarVariable name="disp_node_set_name" valueReference="10" variability="tunable" causality="parameter">
+      <String start="ConstraintDisplacement" />
+    </ScalarVariable>
+
+    <!--Index of variable = "12"-->
+    <ScalarVariable name="fixed_node_set_name" valueReference="11" variability="tunable" causality="parameter">
+      <String start="ConstraintFixed" />
+    </ScalarVariable>
+
+    <!--Index of variable = "13"-->
+    <ScalarVariable name="analysis_type" valueReference="12" variability="tunable" causality="parameter">
+      <String start="Static" />
+    </ScalarVariable>
+
+    <!--Index of variable = "14"-->
+    <ScalarVariable name="output_type" valueReference="13" variability="tunable" causality="parameter">
+      <String start="Force" />
+    </ScalarVariable>
+
+    <!--Index of variable = "15"-->
+    <ScalarVariable name="L" valueReference="14" variability="tunable" causality="parameter">
+      <Real start="600.0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "16"-->
+    <ScalarVariable name="ux" valueReference="15" variability="discrete" causality="input">
+      <Real start="0.0" />
+    </ScalarVariable>
+
+    <!--Index of variable = "17"-->
+    <ScalarVariable name="uy" valueReference="16" variability="discrete" causality="input">
+      <Real start="0.0" />
+    </ScalarVariable>
+
+
+
+  </ModelVariables>
+
+
+  <ModelStructure>
+
+  </ModelStructure>
+</fmiModelDescription>
