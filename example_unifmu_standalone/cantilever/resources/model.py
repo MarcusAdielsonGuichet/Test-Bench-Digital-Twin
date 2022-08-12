@@ -135,6 +135,7 @@ class Model:
         print("\nStep 1...\nSearching for first inp file")
 
         #Finding the inp file
+        new_step_name=""
         step_dir=self.rout_dir
         for root, dirs, files in os.walk(step_dir):
             for file in files:
