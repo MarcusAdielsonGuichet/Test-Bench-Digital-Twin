@@ -1,8 +1,8 @@
 
  total force (fx,fy,fz) for set CONSTRAINTDISPLACEMENT and time  0.1340000E+03
 
-        7.842274E+05  3.029413E-09  2.029512E+02
+        5.506384E+05  2.472063E-09  1.276909E+02
 
  total force (fx,fy,fz) for set CONSTRAINTFIXED and time  0.1340000E+03
 
-       -7.842274E+05  2.806246E-09 -2.029512E+02
+       -5.506384E+05  1.356511E-09 -1.276909E+02

@@ -508,12 +508,12 @@ Evolumes
 
 *STEP, INC=1000000
 *Static
-1e-05,1.0,1e-08,0.1
+1e-05,1,0.001,0.1
 *RESTART, WRITE
 *BOUNDARY
-ConstraintDisplacement,1,1,-0.21636094193955246
+ConstraintDisplacement,1,1,0.2601263236896355
 *BOUNDARY
-ConstraintDisplacement,3,3,-0.6368423236121175
+ConstraintDisplacement,3,3,-0.18900302864034613
 *BOUNDARY
 ConstraintFixed,1,3,0
 *NODE FILE

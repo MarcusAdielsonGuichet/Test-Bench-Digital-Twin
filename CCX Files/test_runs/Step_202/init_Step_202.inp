@@ -4,9 +4,9 @@
 1e-05,1,0.001,0.1
 *RESTART, WRITE
 *BOUNDARY
-ConstraintDisplacement,1,1,-0.13300136817705854
+ConstraintDisplacement,1,1,4.637814428534956
 *BOUNDARY
-ConstraintDisplacement,3,3,2.4840881450310324
+ConstraintDisplacement,3,3,7.1982138873441475
 *BOUNDARY
 ConstraintFixed,1,3,0
 *NODE FILE
